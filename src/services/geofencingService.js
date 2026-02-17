@@ -1,13 +1,13 @@
 /**
  * Geofencing Service
  * Sol-lionaire v0.3
- * 
- * GPS 위치를 추적하여 사용자가 실제 영토에 방문하면 특수 보상 제공
+ * * Tracks GPS location and provides special rewards when users visit physical territories.
  */
 
 /**
- * 주요 랜드마크 좌표
+ * Major landmark coordinates
  */
+import Geolocation from '@react-native-community/geolocation';
 export const Landmarks = {
   MANHATTAN: [
     {
@@ -15,7 +15,7 @@ export const Landmarks = {
       name: '5th Avenue',
       lat: 40.7614,
       lng: -73.9776,
-      radius: 100, // 미터
+      radius: 100, // meter
       reward: {
         type: 'SKIN',
         item: 'Gold Manhole',
@@ -90,7 +90,7 @@ export const Landmarks = {
   SEOUL: [
     {
       id: 'sl_landmark_1',
-      name: '강남역',
+      name: 'Gangnam Station',
       lat: 37.4979,
       lng: 127.0276,
       radius: 100,
@@ -102,7 +102,7 @@ export const Landmarks = {
     },
     {
       id: 'sl_landmark_2',
-      name: 'N서울타워',
+      name: 'N Seoul Tower',
       lat: 37.5512,
       lng: 126.9882,
       radius: 80,
@@ -114,7 +114,7 @@ export const Landmarks = {
     },
     {
       id: 'sl_landmark_3',
-      name: '청담동',
+      name: 'Cheongdam-dong',
       lat: 37.5247,
       lng: 127.0495,
       radius: 120,
@@ -167,11 +167,11 @@ export const Landmarks = {
 };
 
 /**
- * 두 좌표 간 거리 계산 (Haversine formula)
- * @returns {number} 거리 (미터)
+ * Calculate distance between two coordinates (Haversine formula)
+ * @returns {number} distance (meters)
  */
 const calculateDistance = (lat1, lng1, lat2, lng2) => {
-  const R = 6371e3; // 지구 반지름 (미터)
+  const R = 6371e3; // Earth radius (meters)
   const φ1 = (lat1 * Math.PI) / 180;
   const φ2 = (lat2 * Math.PI) / 180;
   const Δφ = ((lat2 - lat1) * Math.PI) / 180;
@@ -179,12 +179,11 @@ const calculateDistance = (lat1, lng1, lat2, lng2) => {
 
   const a = 
     Math.sin(Δφ / 2) * Math.sin(Δφ / 2) +
-    Math.cos(φ1) * Math.cos(φ2) * 
-    Math.sin(Δλ / 2) * Math.sin(Δλ / 2);
+    Math.cos(φ1) * Math.cos(φ2) * Math.sin(Δλ / 2) * Math.sin(Δλ / 2);
   
   const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
 
-  return R * c; // 미터
+  return R * c; // meters
 };
 
 /**
@@ -198,7 +197,7 @@ class GeofencingService {
   }
 
   /**
-   * 위치 추적 시작
+   * Start location tracking
    */
   startTracking(onLocationUpdate, onRewardUnlock) {
     if (this.isTracking) {
@@ -206,24 +205,23 @@ class GeofencingService {
       return;
     }
 
-    // Geolocation API 사용 (React Native에서는 다른 라이브러리 사용)
-    if ('geolocation' in navigator) {
-      this.watchId = navigator.geolocation.watchPosition(
+    // Use React Native Geolocation
+      this.watchId = Geolocation.watchPosition(
         (position) => {
           const { latitude, longitude } = position.coords;
           
           this.currentLocation = { lat: latitude, lng: longitude };
           
-          // 콜백 호출
+          // Call callback
           if (onLocationUpdate) {
             onLocationUpdate(this.currentLocation);
           }
 
-          // 랜드마크 체크
+          // Check landmarks
           this.checkLandmarks(this.currentLocation, onRewardUnlock);
         },
         (error) => {
-          console.error('위치 추적 에러:', error);
+          console.error('Location tracking error:', error);
         },
         {
           enableHighAccuracy: true,
@@ -233,26 +231,24 @@ class GeofencingService {
       );
 
       this.isTracking = true;
-      console.log('📍 위치 추적 시작');
-    } else {
-      console.error('❌ Geolocation not supported');
-    }
+      console.log('📍 Location tracking started');
+    
   }
 
   /**
-   * 위치 추적 중단
+   * Stop location tracking
    */
   stopTracking() {
     if (this.watchId !== null) {
-      navigator.geolocation.clearWatch(this.watchId);
+      Geolocation.clearWatch(this.watchId);
       this.watchId = null;
       this.isTracking = false;
-      console.log('🛑 위치 추적 중단');
+      console.log('🛑 Location tracking stopped');
     }
   }
 
   /**
-   * 랜드마크 근처인지 체크
+   * Check if user is near any landmarks
    */
   checkLandmarks(currentLocation, onRewardUnlock) {
     Object.keys(Landmarks).forEach(cityKey => {
@@ -264,16 +260,16 @@ class GeofencingService {
           landmark.lng
         );
 
-        // 반경 내에 진입
+        // Entered within radius
         if (distance <= landmark.radius) {
-          // 이미 획득했는지 체크
+          // Check if already unlocked
           if (!this.hasUnlockedReward(landmark.id)) {
-            console.log(`🎉 랜드마크 도착: ${landmark.name}`);
+            console.log(`🎉 Arrived at landmark: ${landmark.name}`);
             
-            // 보상 해금
+            // Unlock reward
             this.unlockReward(landmark);
             
-            // 콜백 호출
+            // Call callback
             if (onRewardUnlock) {
               onRewardUnlock(landmark);
             }
@@ -284,7 +280,7 @@ class GeofencingService {
   }
 
   /**
-   * 보상 해금
+   * Unlock reward
    */
   unlockReward(landmark) {
     try {
@@ -300,17 +296,17 @@ class GeofencingService {
       });
       
       localStorage.setItem(key, JSON.stringify(rewards));
-      console.log('🏆 보상 해금:', landmark.reward);
+      console.log('🏆 Reward unlocked:', landmark.reward);
 
-      // 푸시 알림 (웹에서는 Notification API 사용)
+      // Push notification (Use Notification API on web)
       this.sendNotification(landmark);
     } catch (error) {
-      console.error('보상 저장 실패:', error);
+      console.error('Failed to save reward:', error);
     }
   }
 
   /**
-   * 보상 획득 여부 확인
+   * Check if reward is already unlocked
    */
   hasUnlockedReward(landmarkId) {
     try {
@@ -326,7 +322,7 @@ class GeofencingService {
   }
 
   /**
-   * 푸시 알림 전송
+   * Send push notification
    */
   sendNotification(landmark) {
     if ('Notification' in window && Notification.permission === 'granted') {
@@ -338,7 +334,7 @@ class GeofencingService {
   }
 
   /**
-   * 알림 권한 요청
+   * Request notification permission
    */
   requestNotificationPermission() {
     if ('Notification' in window && Notification.permission === 'default') {
@@ -347,7 +343,7 @@ class GeofencingService {
   }
 
   /**
-   * 획득한 보상 목록 조회
+   * Retrieve the list of unlocked rewards
    */
   getUnlockedRewards() {
     try {
