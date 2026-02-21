@@ -29,6 +29,7 @@ export const useRealWalletConnection = () => {
 
   const connection = new Connection(SOLANA_RPC, 'confirmed');
 
+  // 잔액 조회 - 별도로 비동기 실행 (연결 블로킹 안 함)
   const fetchBalance = async (pubkeyStr) => {
     try {
       const lamports = await connection.getBalance(new PublicKey(pubkeyStr));
@@ -39,7 +40,6 @@ export const useRealWalletConnection = () => {
     }
   };
 
-  // walletId: 'phantom' | 'seedvault'
   const connectWallet = useCallback(async (walletId = 'phantom') => {
     setIsLoading(true);
     setError(null);
@@ -63,15 +63,20 @@ export const useRealWalletConnection = () => {
         const pubkeyStr = pubkey.toBase58();
         console.log('✅ Connected (base58):', pubkeyStr);
 
-        const sol = await fetchBalance(pubkeyStr);
-
+        // ★ 핵심: 잔액 기다리지 않고 먼저 연결 상태 업데이트!
         setWalletAddress(pubkeyStr);
-        setBalance(sol);
         setIsConnected(true);
         setWalletName(walletId === 'phantom' ? '👻 Phantom' : '🔐 Seed Vault');
         setAuthToken(token);
+        setIsLoading(false);
 
-        return { publicKey: pubkeyStr, balance: sol };
+        // 잔액은 별도로 백그라운드에서 조회
+        fetchBalance(pubkeyStr).then(sol => {
+          console.log('💰 Balance:', sol, 'SOL');
+          setBalance(sol);
+        });
+
+        return { publicKey: pubkeyStr };
 
       } else {
         // Web fallback
@@ -82,6 +87,7 @@ export const useRealWalletConnection = () => {
         setWalletName('Test Wallet');
         return { publicKey: mockKey, balance: 2.0 };
       }
+
     } catch (err) {
       console.error('❌ Wallet connection failed:', err);
       setError(err.message);
@@ -115,9 +121,35 @@ export const useRealWalletConnection = () => {
     setBalance(sol);
   }, [walletAddress]);
 
+  const signAndSendTransaction = useCallback(async (transaction) => {
+    if (!isConnected || !walletAddress) throw new Error('Wallet not connected');
+    try {
+      if (Platform.OS === 'android' && authToken) {
+        return await transact(async (wallet) => {
+          await wallet.authorize({
+            cluster: 'devnet',
+            identity: APP_IDENTITY,
+            auth_token: authToken,
+          });
+          const { blockhash } = await connection.getLatestBlockhash();
+          transaction.recentBlockhash = blockhash;
+          transaction.feePayer = new PublicKey(walletAddress);
+          const [signedTx] = await wallet.signTransactions({ transactions: [transaction] });
+          const sig = await connection.sendRawTransaction(signedTx.serialize());
+          await connection.confirmTransaction(sig);
+          return sig;
+        });
+      }
+    } catch (e) {
+      console.error('❌ Transaction failed:', e);
+      throw e;
+    }
+  }, [isConnected, walletAddress, authToken]);
+
   return {
     walletAddress, balance, isConnected, isLoading,
-    error, walletName, connectWallet, disconnectWallet, refreshBalance,
+    error, walletName, connectWallet, disconnectWallet,
+    signAndSendTransaction, refreshBalance,
   };
 };
 

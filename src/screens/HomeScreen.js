@@ -3,6 +3,7 @@ import {
   View, Text, ScrollView, StyleSheet,
   TouchableOpacity, StatusBar, Alert, Modal, Animated,
 } from 'react-native';
+import { Linking } from "react-native";
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { useWallet } from '../context/WalletContext';
 import { valueCalculator, CityType } from '../services/valueCalculator';
@@ -29,7 +30,7 @@ const WalletPickerModal = ({ visible, onSelect, onClose }) => {
   }, [visible]);
 
   const WALLETS = [
-    { id: 'phantom',   emoji: '👻', label: 'Phantom',    sub: 'Most popular Solana wallet' },
+    
     { id: 'seedvault', emoji: '🔐', label: 'Seed Vault', sub: 'Seeker built-in secure wallet' },
   ];
 
@@ -251,7 +252,7 @@ export default function HomeScreen() {
             </Text>
             <TouchableOpacity
               style={styles.jupiterButton}
-              onPress={() => Alert.alert('Jupiter Swap', 'Opening Jupiter...')}
+              onPress={() => Linking.openURL('https://jup.ag/swap/USDC-SOL')}
             >
               <Text style={styles.jupiterButtonText}>⚡ Swap on Jupiter</Text>
             </TouchableOpacity>

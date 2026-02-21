@@ -1,288 +1,83 @@
-import React, { useEffect, useRef } from 'react';
-import { View, Text, StyleSheet, Animated } from 'react-native';
-import { Card } from './ui/Card';
-import AnimatedCounter from './AnimatedCounter';
-import { Colors, Typography, Spacing, BorderRadius } from '../styles/theme';
-
 /**
- * Premium Result Card Component
- * Shows territory/property with animations
+ * ResultCard - Sol-lionaire v0.4
+ * 5-Tier Result Display
  */
-export const ResultCard = ({ mappingResult, onMount }) => {
-  const fadeAnim = useRef(new Animated.Value(0)).current;
-  const slideAnim = useRef(new Animated.Value(50)).current;
+import React from 'react';
+import { View, Text, StyleSheet } from 'react-native';
+import { LinearGradient } from 'expo-linear-gradient';
 
-  useEffect(() => {
-    // Entrance animation
-    Animated.parallel([
-      Animated.timing(fadeAnim, {
-        toValue: 1,
-        duration: 800,
-        useNativeDriver: true,
-      }),
-      Animated.spring(slideAnim, {
-        toValue: 0,
-        friction: 8,
-        tension: 40,
-        useNativeDriver: true,
-      }),
-    ]).start(() => {
-      if (onMount) onMount();
-    });
-  }, []);
+const P = {
+  black:    '#0A0A0A',
+  charcoal: '#141414',
+  dark:     '#1C1C1C',
+  mid:      '#2A2A2A',
+  gray:     '#888888',
+  offWhite: '#F5F0E8',
+  gold:     '#C9A84C',
+  goldLight:'#E8C96A',
+  goldDeep: '#A07830',
+};
 
-  const { type, totalValue, object, property, ownedArea, ownershipType, ownedRooms } = mappingResult;
-  const isMicro = type === 'MICRO';
-  const item = isMicro ? object : property;
+const ResultCard = ({ mappingResult }) => {
+  if (!mappingResult) return null;
+
+  const { tier, level, propertyName, location, totalValue, sqm, narrative, starProgress } = mappingResult;
 
   return (
-    <Animated.View
-      style={[
-        styles.container,
-        {
-          opacity: fadeAnim,
-          transform: [{ translateY: slideAnim }],
-        },
-      ]}
+    <LinearGradient
+      colors={[P.dark, P.charcoal]}
+      style={[s.card, { borderColor: tier.color }]}
     >
-      {/* Title */}
-      <Text style={styles.title}>
-        {isMicro ? '🎯 Your Territory' : '🏆 Your Property'}
-      </Text>
+      <LinearGradient
+        colors={[P.goldDeep, P.gold, P.goldLight, P.gold, P.goldDeep]}
+        start={{ x: 0, y: 0 }} end={{ x: 1, y: 0 }}
+        style={s.accentLine}
+      />
 
-      {/* Main Card */}
-      <Card variant="gold" padding="large" shadow>
-        {/* Total Value */}
-        <AnimatedCounter
-          targetValue={totalValue}
-          prefix="$"
-          decimals={2}
-          style={styles.valueText}
-        />
+      <View style={s.header}>
+        <Text style={s.eyebrow}>LEVEL {level || tier.level} • {starProgress?.starsDisplay || "★☆☆"}</Text>
+        <Text style={s.propertyName}>{propertyName}</Text>
+        <Text style={s.location}>📍 {location}</Text>
+      </View>
 
-        {/* Micro Object */}
-        {isMicro && (
-          <View style={styles.objectContainer}>
-            <Text style={styles.objectName}>{object.name}</Text>
-            <Text style={styles.objectLocation}>📍 {object.location}</Text>
-            <Text style={styles.objectDescription}>{object.description}</Text>
+      <View style={s.statsRow}>
+        <View style={s.statItem}>
+          <Text style={s.statLabel}>TIER</Text>
+          <Text style={[s.statValue, { color: tier.color }]}>{tier.rarity}</Text>
+        </View>
+        <View style={s.divider} />
+        <View style={s.statItem}>
+          <Text style={s.statLabel}>VALUE</Text>
+          <Text style={s.statValue}>${totalValue.toLocaleString(undefined, { maximumFractionDigits: 0 })}</Text>
+        </View>
+        <View style={s.divider} />
+        <View style={s.statItem}>
+          <Text style={s.statLabel}>AREA</Text>
+          <Text style={s.statValue}>{sqm} m²</Text>
+        </View>
+      </View>
 
-            {object.rarity && (
-              <View style={[styles.rarityBadge, { borderColor: getRarityColor(object.rarity) }]}>
-                <Text style={[styles.rarityText, { color: getRarityColor(object.rarity) }]}>
-                  {object.rarity}
-                </Text>
-              </View>
-            )}
-          </View>
-        )}
-
-        {/* Macro Property */}
-        {!isMicro && (
-          <View style={styles.propertyContainer}>
-            <Text style={styles.propertyName}>{property.name}</Text>
-            <Text style={styles.propertyLocation}>📍 {property.location}</Text>
-
-            {/* Property Details */}
-            <View style={styles.detailsRow}>
-              <DetailItem icon="🏢" label={`Floor ${property.floor}`} />
-              <DetailItem icon="📐" label={`${ownedArea?.toFixed(1) || property.area} m²`} />
-            </View>
-
-            <Text style={styles.propertyView}>🌆 {property.view}</Text>
-
-            {/* Partial Ownership */}
-            {ownershipType === 'PARTIAL' && (
-              <View style={styles.partialSection}>
-                <Text style={styles.partialTitle}>You Own:</Text>
-                {ownedRooms.map((room, index) => (
-                  <AnimatedRoom key={index} room={room} delay={index * 100} />
-                ))}
-                <Text style={styles.ownershipRatio}>
-                  ({((ownedArea / property.area) * 100).toFixed(1)}% ownership)
-                </Text>
-              </View>
-            )}
-          </View>
-        )}
-      </Card>
-
-      {/* Timestamp */}
-      <Text style={styles.timestamp}>
-        Data based on {new Date().toLocaleDateString()}
-      </Text>
-    </Animated.View>
+      <View style={s.narrativeWrap}>
+        <Text style={s.narrative}>{narrative}</Text>
+      </View>
+    </LinearGradient>
   );
 };
 
-/**
- * Animated Room Item
- */
-const AnimatedRoom = ({ room, delay }) => {
-  const fadeAnim = useRef(new Animated.Value(0)).current;
-
-  useEffect(() => {
-    Animated.timing(fadeAnim, {
-      toValue: 1,
-      duration: 400,
-      delay,
-      useNativeDriver: true,
-    }).start();
-  }, []);
-
-  return (
-    <Animated.Text style={[styles.roomItem, { opacity: fadeAnim }]}>
-      • {room}
-    </Animated.Text>
-  );
-};
-
-/**
- * Property Detail Item
- */
-const DetailItem = ({ icon, label }) => (
-  <View style={styles.detailItem}>
-    <Text style={styles.detailIcon}>{icon}</Text>
-    <Text style={styles.detailLabel}>{label}</Text>
-  </View>
-);
-
-/**
- * Get rarity color
- */
-const getRarityColor = (rarity) => {
-  const colors = {
-    Common: Colors.common,
-    Uncommon: Colors.uncommon,
-    Rare: Colors.rare,
-    Epic: Colors.epic,
-    Legendary: Colors.legendary,
-  };
-  return colors[rarity] || Colors.white;
-};
-
-const styles = StyleSheet.create({
-  container: {
-    marginTop: Spacing.lg,
-  },
-  title: {
-    fontSize: Typography.xl,
-    fontWeight: Typography.bold,
-    color: Colors.gold,
-    textAlign: 'center',
-    marginBottom: Spacing.base,
-  },
-  valueText: {
-    fontSize: Typography.huge,
-    fontWeight: Typography.bold,
-    color: Colors.success,
-    textAlign: 'center',
-    marginBottom: Spacing.base,
-  },
-  
-  // Micro Object
-  objectContainer: {
-    alignItems: 'center',
-  },
-  objectName: {
-    fontSize: Typography.xxl,
-    fontWeight: Typography.bold,
-    color: Colors.white,
-    textAlign: 'center',
-    marginBottom: Spacing.sm,
-  },
-  objectLocation: {
-    fontSize: Typography.base,
-    color: Colors.lightGray,
-    marginBottom: Spacing.sm,
-  },
-  objectDescription: {
-    fontSize: Typography.md,
-    color: Colors.gold,
-    fontStyle: 'italic',
-    textAlign: 'center',
-    marginTop: Spacing.sm,
-  },
-  rarityBadge: {
-    marginTop: Spacing.md,
-    paddingVertical: Spacing.sm,
-    paddingHorizontal: Spacing.base,
-    borderRadius: BorderRadius.lg,
-    borderWidth: 2,
-  },
-  rarityText: {
-    fontSize: Typography.sm,
-    fontWeight: Typography.semibold,
-  },
-  
-  // Macro Property
-  propertyContainer: {
-    // Styles for property
-  },
-  propertyName: {
-    fontSize: Typography.xxl,
-    fontWeight: Typography.bold,
-    color: Colors.white,
-    marginBottom: Spacing.sm,
-  },
-  propertyLocation: {
-    fontSize: Typography.base,
-    color: Colors.lightGray,
-    marginBottom: Spacing.md,
-  },
-  detailsRow: {
-    flexDirection: 'row',
-    justifyContent: 'space-around',
-    marginVertical: Spacing.md,
-  },
-  detailItem: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: Spacing.xs,
-  },
-  detailIcon: {
-    fontSize: Typography.base,
-  },
-  detailLabel: {
-    fontSize: Typography.base,
-    color: Colors.white,
-    fontWeight: Typography.medium,
-  },
-  propertyView: {
-    fontSize: Typography.base,
-    color: Colors.gold,
-    textAlign: 'center',
-    marginTop: Spacing.sm,
-  },
-  partialSection: {
-    marginTop: Spacing.base,
-    paddingTop: Spacing.base,
-    borderTopWidth: 1,
-    borderTopColor: '#333',
-  },
-  partialTitle: {
-    fontSize: Typography.base,
-    color: Colors.lightGray,
-    marginBottom: Spacing.sm,
-  },
-  roomItem: {
-    fontSize: Typography.base,
-    color: Colors.white,
-    marginBottom: Spacing.xs,
-  },
-  ownershipRatio: {
-    fontSize: Typography.sm,
-    color: Colors.gold,
-    fontStyle: 'italic',
-    marginTop: Spacing.sm,
-  },
-  timestamp: {
-    fontSize: Typography.xs,
-    color: Colors.darkText,
-    textAlign: 'center',
-    marginTop: Spacing.base,
-    fontStyle: 'italic',
-  },
+const s = StyleSheet.create({
+  card: { borderRadius: 20, borderWidth: 2, padding: 24, marginTop: 24, overflow: 'hidden' },
+  accentLine: { position: 'absolute', top: 0, left: 0, right: 0, height: 2 },
+  header: { alignItems: 'center', marginBottom: 20 },
+  eyebrow: { fontSize: 10, color: P.gold, letterSpacing: 4, fontWeight: '600', marginBottom: 8 },
+  propertyName: { fontSize: 24, fontWeight: '700', color: P.offWhite, letterSpacing: 0.5, marginBottom: 8, textAlign: 'center' },
+  location: { fontSize: 13, color: P.gray, letterSpacing: 0.5 },
+  statsRow: { flexDirection: 'row', justifyContent: 'space-around', paddingVertical: 16, borderTopWidth: 1, borderBottomWidth: 1, borderColor: P.mid },
+  statItem: { alignItems: 'center', flex: 1 },
+  statLabel: { fontSize: 10, color: P.gray, letterSpacing: 2, fontWeight: '600', marginBottom: 6 },
+  statValue: { fontSize: 18, fontWeight: '700', color: P.offWhite },
+  divider: { width: 1, backgroundColor: P.mid },
+  narrativeWrap: { marginTop: 20 },
+  narrative: { fontSize: 14, color: P.gray, lineHeight: 22, textAlign: 'center', letterSpacing: 0.3, fontStyle: 'italic' },
 });
 
 export default ResultCard;

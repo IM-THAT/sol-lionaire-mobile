@@ -143,7 +143,7 @@ export default function AssetsScreen() {
           <Text style={s.sectionTitle}>Tiers Achieved</Text>
           <View style={s.badgeGrid}>
             {PROPERTY_TIERS.map((tier, idx) => {
-              const achieved = (balance || 2) >= tier.minSOL;
+              const achieved = totalUSD >= tier.minUSD;
               return (
                 <View key={idx} style={[
                   s.badge,
@@ -151,7 +151,7 @@ export default function AssetsScreen() {
                     ? { borderColor: tier.color, backgroundColor: `${tier.color}18` }
                     : { borderColor: P.mid, opacity: 0.4 },
                 ]}>
-                  <Text style={s.badgeRarity}>LEVEL {tier.level}</Text>
+                  <Text style={s.badgeRarity}>{tier.rarity.toUpperCase()}</Text>
                   <Text style={[s.badgeName, { color: achieved ? tier.color : P.gray }]}>
                     {tier.names[city]}
                   </Text>

@@ -1,6 +1,6 @@
 /**
- * Value Calculator - Enhanced for Asset Odyssey
- * Calculates property tiers for past, present, and future
+ * Value Calculator - Sol-lionaire v0.5
+ * 10-Level Hyper-Real Ownership System
  */
 
 export const CityType = {
@@ -8,180 +8,375 @@ export const CityType = {
   DUBAI: 'DUBAI',
 };
 
-// Property tiers with USD thresholds
-export const PROPERTY_TIERS = [
-  {
-    id: 'manhole',
-    name: 'Iron Manhole Cover',
-    shortName: 'Manhole',
-    emoji: '🔩',
-    minUSD: 0,
-    maxUSD: 500,
-    description: 'A small but real stake in the city streets.',
-    location: { MANHATTAN: '5th Ave, Manhattan', DUBAI: 'Downtown Dubai' },
-    rarity: 'Common',
-    color: '#9E9E9E',
+// Real estate price data (Benchmark as of Feb 2024)
+export const CITY_CONFIG = {
+  MANHATTAN: {
+    pricePerSqm: 22000,
+    currency: 'USD',
+    lastUpdated: '2024-02',
+    source: 'Manhattan Market Report',
+    label: 'New York',
+    emoji: '🗽',
+    tone: 'cold',
   },
-  {
-    id: 'bench',
-    name: 'Park Bench',
-    shortName: 'Bench',
-    emoji: '🪑',
-    minUSD: 500,
-    maxUSD: 2000,
-    description: 'Your own corner of the urban landscape.',
-    location: { MANHATTAN: 'Central Park, NYC', DUBAI: 'Jumeirah Beach' },
-    rarity: 'Common',
-    color: '#8BC34A',
-  },
-  {
-    id: 'parking',
-    name: 'Parking Spot',
-    shortName: 'Parking',
-    emoji: '🅿️',
-    minUSD: 2000,
-    maxUSD: 10000,
-    description: 'Prime real estate in the concrete jungle.',
-    location: { MANHATTAN: 'Midtown Manhattan', DUBAI: 'Dubai Marina' },
-    rarity: 'Uncommon',
-    color: '#2196F3',
-  },
-  {
-    id: 'studio',
-    name: 'Studio Apartment',
-    shortName: 'Studio',
-    emoji: '🏠',
-    minUSD: 10000,
-    maxUSD: 100000,
-    description: 'Your first real foothold in the city.',
-    location: { MANHATTAN: 'Lower East Side, NYC', DUBAI: 'JLT, Dubai' },
-    rarity: 'Uncommon',
-    color: '#2196F3',
-  },
-  {
-    id: 'onebedroom',
-    name: 'One Bedroom Apartment',
-    shortName: '1 Bedroom',
-    emoji: '🏢',
-    minUSD: 100000,
-    maxUSD: 500000,
-    description: 'Established. A proper address in the city.',
-    location: { MANHATTAN: 'Upper West Side, NYC', DUBAI: 'Business Bay' },
-    rarity: 'Rare',
-    color: '#9C27B0',
-  },
-  {
-    id: 'luxury',
-    name: 'Luxury Apartment',
-    shortName: 'Luxury Apt',
+  DUBAI: {
+    pricePerSqm: 7500,
+    currency: 'USD',
+    lastUpdated: '2024-02',
+    source: 'Dubai Land Department (DLD)',
+    label: 'Dubai',
     emoji: '🏙️',
-    minUSD: 500000,
-    maxUSD: 2000000,
-    description: 'The top 1%. A statement of wealth.',
-    location: { MANHATTAN: 'Central Park South', DUBAI: 'Palm Jumeirah' },
-    rarity: 'Epic',
-    color: '#FF9800',
+    tone: 'warm',
   },
-  {
-    id: 'penthouse',
-    name: 'Penthouse Suite',
-    shortName: 'Penthouse',
-    emoji: '👑',
-    minUSD: 2000000,
-    maxUSD: Infinity,
-    description: 'Above it all. The pinnacle of urban wealth.',
-    location: { MANHATTAN: '432 Park Avenue', DUBAI: 'Burj Khalifa' },
-    rarity: 'Legendary',
-    color: '#FFD700',
-  },
-];
-
-// Historical SOL prices (USD) for past simulation
-const HISTORICAL_SOL_PRICES = [
-  { date: '2024-01', price: 102.5 },
-  { date: '2024-02', price: 118.3 },
-  { date: '2024-03', price: 189.7 },
-  { date: '2024-04', price: 178.2 },
-  { date: '2024-05', price: 169.4 },
-  { date: '2024-06', price: 145.8 },
-  { date: '2024-07', price: 158.2 },
-  { date: '2024-08', price: 143.6 },
-  { date: '2024-09', price: 152.9 },
-  { date: '2024-10', price: 174.3 },
-  { date: '2024-11', price: 228.5 },
-  { date: '2024-12', price: 196.8 },
-  { date: '2025-01', price: 241.2 },
-  { date: '2025-02', price: 162.4 },
-  { date: '2025-03', price: 135.7 },
-  { date: '2025-04', price: 148.9 },
-  { date: '2025-05', price: 172.3 },
-  { date: '2025-06', price: 158.6 },
-  { date: '2025-07', price: 143.2 },
-  { date: '2025-08', price: 156.8 },
-  { date: '2025-09', price: 168.4 },
-  { date: '2025-10', price: 145.9 },
-  { date: '2025-11', price: 139.2 },
-  { date: '2025-12', price: 152.7 },
-  { date: '2026-01', price: 143.8 },
-  { date: '2026-02', price: 139.8 },
-];
-
-// City price per sqm (USD)
-const CITY_PRICES = {
-  MANHATTAN: 15000,
-  DUBAI: 8500,
 };
 
+// 10-Level Property System (1 SOL = $140 = ₩190,000)
+export const PROPERTY_TIERS = [
+  {
+    id: 'level1',
+    level: 1,
+    minSOL: 1,
+    maxSOL: 10,
+    minUSD: 140,
+    maxUSD: 1400,
+    color: '#4A4A4A',
+    names: {
+      MANHATTAN: 'The Urban Grid',
+      DUBAI: 'The Sand Plot',
+    },
+    descriptions: {
+      MANHATTAN: 'Cybernetic golden manhole cover',
+      DUBAI: 'Holographic land boundary in desert',
+    },
+    locations: {
+      MANHATTAN: 'Lower Manhattan Infrastructure',
+      DUBAI: 'Desert Outskirts',
+    },
+    narratives: {
+      MANHATTAN: 'Every empire begins beneath the surface.',
+      DUBAI: 'The desert holds infinite potential.',
+    },
+    imageKey: {
+      MANHATTAN: 'ny_level1',
+      DUBAI: 'db_level1',
+    },
+  },
+  {
+    id: 'level2',
+    level: 2,
+    minSOL: 10,
+    maxSOL: 50,
+    minUSD: 1400,
+    maxUSD: 7000,
+    color: '#5A5A5A',
+    names: {
+      MANHATTAN: 'The Public Anchor',
+      DUBAI: 'The Lamp Post',
+    },
+    descriptions: {
+      MANHATTAN: 'Artistic park bench with dark metal and gold',
+      DUBAI: 'Futuristic golden street lamp',
+    },
+    locations: {
+      MANHATTAN: 'Central Park',
+      DUBAI: 'Dubai Marina',
+    },
+    narratives: {
+      MANHATTAN: 'A permanent mark in the city that never sleeps.',
+      DUBAI: 'Your light shines on the waterfront.',
+    },
+    imageKey: {
+      MANHATTAN: 'ny_level2',
+      DUBAI: 'db_level2',
+    },
+  },
+  {
+    id: 'level3',
+    level: 3,
+    minSOL: 50,
+    maxSOL: 250,
+    minUSD: 7000,
+    maxUSD: 35000,
+    color: '#6A6A6A',
+    names: {
+      MANHATTAN: 'The Secure Vault',
+      DUBAI: 'The Prime Sector',
+    },
+    descriptions: {
+      MANHATTAN: 'High-tech golden storage vault',
+      DUBAI: 'Laser-marked premium parking zone',
+    },
+    locations: {
+      MANHATTAN: 'Financial District',
+      DUBAI: 'Marina Bay',
+    },
+    narratives: {
+      MANHATTAN: 'Your assets are secured in the heart of finance.',
+      DUBAI: 'Premium positioning in the new world.',
+    },
+    imageKey: {
+      MANHATTAN: 'ny_level3',
+      DUBAI: 'db_level3',
+    },
+  },
+  {
+    id: 'level4',
+    level: 4,
+    minSOL: 250,
+    maxSOL: 1250,
+    minUSD: 35000,
+    maxUSD: 175000,
+    color: '#7D7D7D',
+    names: {
+      MANHATTAN: 'The Entry Studio',
+      DUBAI: 'The Smart Studio',
+    },
+    descriptions: {
+      MANHATTAN: 'Compact dark luxury room',
+      DUBAI: 'Minimalist smart studio',
+    },
+    locations: {
+      MANHATTAN: 'Brooklyn Heights',
+      DUBAI: 'Business Bay',
+    },
+    narratives: {
+      MANHATTAN: 'Your first real space in the concrete jungle.',
+      DUBAI: 'Modern living in the city of tomorrow.',
+    },
+    imageKey: {
+      MANHATTAN: 'ny_level4',
+      DUBAI: 'db_level4',
+    },
+  },
+  {
+    id: 'level5',
+    level: 5,
+    minSOL: 1250,
+    maxSOL: 3500,
+    minUSD: 175000,
+    maxUSD: 490000,
+    color: '#8F8F8F',
+    names: {
+      MANHATTAN: 'The Urban Suite',
+      DUBAI: 'The Marina One',
+    },
+    descriptions: {
+      MANHATTAN: 'Stylish midtown studio',
+      DUBAI: 'White & gold concept room',
+    },
+    locations: {
+      MANHATTAN: 'Midtown Manhattan',
+      DUBAI: 'Dubai Marina',
+    },
+    narratives: {
+      MANHATTAN: 'Refinement meets opportunity in the city center.',
+      DUBAI: 'Where luxury meets the sea.',
+    },
+    imageKey: {
+      MANHATTAN: 'ny_level5',
+      DUBAI: 'db_level5',
+    },
+  },
+  {
+    id: 'level6',
+    level: 6,
+    minSOL: 3500,
+    maxSOL: 10000,
+    minUSD: 490000,
+    maxUSD: 1400000,
+    color: '#A8A8A8',
+    names: {
+      MANHATTAN: 'The Prime Residence',
+      DUBAI: 'The High-rise Duo',
+    },
+    descriptions: {
+      MANHATTAN: 'Modern Chelsea living room',
+      DUBAI: 'Duplex high-rise with golden spiral',
+    },
+    locations: {
+      MANHATTAN: 'Chelsea, Manhattan',
+      DUBAI: 'Downtown Dubai',
+    },
+    narratives: {
+      MANHATTAN: 'You have arrived in the heart of culture.',
+      DUBAI: 'Vertical luxury redefined.',
+    },
+    imageKey: {
+      MANHATTAN: 'ny_level6',
+      DUBAI: 'db_level6',
+    },
+  },
+  {
+    id: 'level7',
+    level: 7,
+    minSOL: 10000,
+    maxSOL: 50000,
+    minUSD: 1400000,
+    maxUSD: 7000000,
+    color: '#C0C0C0',
+    names: {
+      MANHATTAN: 'The Soho Legacy',
+      DUBAI: 'The Palm View',
+    },
+    descriptions: {
+      MANHATTAN: 'Classic red brick townhouse',
+      DUBAI: 'High-floor terrace overlooking Palm',
+    },
+    locations: {
+      MANHATTAN: 'SoHo, Manhattan',
+      DUBAI: 'Palm Jumeirah',
+    },
+    narratives: {
+      MANHATTAN: 'History and modernity converge under your ownership.',
+      DUBAI: 'The iconic palm is yours to behold.',
+    },
+    imageKey: {
+      MANHATTAN: 'ny_level7',
+      DUBAI: 'db_level7',
+    },
+  },
+  {
+    id: 'level8',
+    level: 8,
+    minSOL: 50000,
+    maxSOL: 150000,
+    minUSD: 7000000,
+    maxUSD: 21000000,
+    color: '#D4AF37',
+    names: {
+      MANHATTAN: 'The Townhouse',
+      DUBAI: 'The Beach Villa',
+    },
+    descriptions: {
+      MANHATTAN: 'Upper East Side mansion',
+      DUBAI: 'Beachfront villa with infinity pool',
+    },
+    locations: {
+      MANHATTAN: 'Upper East Side, Manhattan',
+      DUBAI: 'Jumeirah Beach',
+    },
+    narratives: {
+      MANHATTAN: 'Old money elegance, new world power.',
+      DUBAI: 'Private paradise where sand meets sea.',
+    },
+    imageKey: {
+      MANHATTAN: 'ny_level8',
+      DUBAI: 'db_level8',
+    },
+  },
+  {
+    id: 'level9',
+    level: 9,
+    minSOL: 150000,
+    maxSOL: 500000,
+    minUSD: 21000000,
+    maxUSD: 70000000,
+    color: '#E8C96A',
+    names: {
+      MANHATTAN: 'The Sky Mansion',
+      DUBAI: 'The Royal Manor',
+    },
+    descriptions: {
+      MANHATTAN: 'Ultra high-rise penthouse',
+      DUBAI: 'Royal Atlantis-level sky mansion',
+    },
+    locations: {
+      MANHATTAN: 'Billionaires Row, Manhattan',
+      DUBAI: 'Royal Atlantis',
+    },
+    narratives: {
+      MANHATTAN: 'You stand above the city, looking down on Central Park.',
+      DUBAI: 'Royal treatment is your new standard.',
+    },
+    imageKey: {
+      MANHATTAN: 'ny_level9',
+      DUBAI: 'db_level9',
+    },
+  },
+  {
+    id: 'level10',
+    level: 10,
+    minSOL: 500000,
+    maxSOL: Infinity,
+    minUSD: 70000000,
+    maxUSD: Infinity,
+    color: '#FFD700',
+    names: {
+      MANHATTAN: 'The Landmark',
+      DUBAI: 'The Sovereign Estate',
+    },
+    descriptions: {
+      MANHATTAN: 'Empire State Building peak',
+      DUBAI: 'Royal palace commanding Dubai',
+    },
+    locations: {
+      MANHATTAN: 'Manhattan Landmark',
+      DUBAI: 'Dubai Royal District',
+    },
+    narratives: {
+      MANHATTAN: 'You are not just in New York. You ARE New York.',
+      DUBAI: 'Sovereignty. The city bends to your will.',
+    },
+    imageKey: {
+      MANHATTAN: 'ny_level10',
+      DUBAI: 'db_level10',
+    },
+  },
+];
+
 class ValueCalculator {
-  /**
-   * Get tier for a given USD value
-   */
-  getTierForUSD(usdValue) {
-    return PROPERTY_TIERS.find(t => usdValue >= t.minUSD && usdValue < t.maxUSD)
-      || PROPERTY_TIERS[PROPERTY_TIERS.length - 1];
+  getTierForSOL(solAmount) {
+    return (
+      PROPERTY_TIERS.find(t => solAmount >= t.minSOL && solAmount < t.maxSOL) ||
+      PROPERTY_TIERS[PROPERTY_TIERS.length - 1]
+    );
   }
 
-  /**
-   * Main mapping function
-   */
-  determineMapping({ solAmount, solPrice, cityPricePerSqm, cityType }) {
-    const totalUSD = solAmount * solPrice;
-    const tier = this.getTierForUSD(totalUSD);
+  calculateStarProgress(solAmount, tier) {
+    const progress = ((solAmount - tier.minSOL) / (tier.maxSOL - tier.minSOL)) * 100;
+    const clampedProgress = Math.min(Math.max(progress, 0), 99.9);
+    
+    let stars = 0;
+    if (clampedProgress >= 67) stars = 3;
+    else if (clampedProgress >= 34) stars = 2;
+    else stars = 1;
 
     return {
-      type: totalUSD < 500 ? 'MICRO' : 'MACRO',
-      totalValue: totalUSD,
-      cityType,
-      object: {
-        name: tier.name,
-        location: tier.location[cityType] || tier.location.MANHATTAN,
-        description: tier.description,
-        rarity: tier.rarity,
-        emoji: tier.emoji,
-      },
-      property: {
-        name: tier.name,
-        location: tier.location[cityType] || tier.location.MANHATTAN,
-        view: tier.description,
-        floor: Math.floor(Math.random() * 50) + 1,
-        area: Math.floor(totalUSD / (cityPricePerSqm || CITY_PRICES[cityType])),
-      },
-      tier,
+      progress: clampedProgress,
+      stars,
+      starsDisplay: '★'.repeat(stars) + '☆'.repeat(3 - stars),
     };
   }
 
-  /**
-   * Calculate upgrade info
-   */
-  calculateUpgrade({ solAmount, solPrice, cityType }) {
+  determineMapping({ solAmount, solPrice, cityType = 'MANHATTAN' }) {
+    const tier = this.getTierForSOL(solAmount);
     const totalUSD = solAmount * solPrice;
-    const currentTier = this.getTierForUSD(totalUSD);
+    const city = CITY_CONFIG[cityType];
+    const starInfo = this.calculateStarProgress(solAmount, tier);
+
+    return {
+      totalValue: totalUSD,
+      cityType,
+      tier,
+      level: tier.level,
+      propertyName: tier.names[cityType],
+      location: tier.locations[cityType],
+      narrative: tier.narratives[cityType],
+      description: tier.descriptions[cityType],
+      imageKey: tier.imageKey[cityType],
+      sqm: Math.floor(totalUSD / city.pricePerSqm),
+      starProgress: starInfo,
+    };
+  }
+
+  calculateUpgrade({ solAmount, solPrice, cityType = 'MANHATTAN' }) {
+    const currentTier = this.getTierForSOL(solAmount);
     const currentIndex = PROPERTY_TIERS.indexOf(currentTier);
     const nextTier = PROPERTY_TIERS[currentIndex + 1];
 
     if (!nextTier) {
       return {
-        message: '👑 You own the Penthouse! Maximum tier reached!',
+        message: '👑 Maximum level reached.',
         solNeeded: 0,
         nextTier: null,
         currentTier,
@@ -189,76 +384,30 @@ class ValueCalculator {
       };
     }
 
-    const usdNeeded = nextTier.minUSD - totalUSD;
-    const solNeeded = usdNeeded / solPrice;
-    const progress = ((totalUSD - currentTier.minUSD) / (nextTier.minUSD - currentTier.minUSD)) * 100;
+    const solNeeded = nextTier.minSOL - solAmount;
+    const usdNeeded = solNeeded * solPrice;
+    const progress = ((solAmount - currentTier.minSOL) / (nextTier.minSOL - currentTier.minSOL)) * 100;
 
     return {
-      message: `${solNeeded.toFixed(2)} SOL more → ${nextTier.shortName}`,
       solNeeded,
       usdNeeded,
       nextTier,
       currentTier,
-      progress: Math.min(progress, 99),
+      progress: Math.min(Math.max(progress, 0), 99),
     };
   }
 
-  /**
-   * Generate Asset Odyssey timeline
-   * Shows tier progression over time
-   */
-  generateOdysseyTimeline({ solAmount, currentSolPrice, cityType, months = 12 }) {
-    const timeline = [];
-
-    // Past months
-    const recentPrices = HISTORICAL_SOL_PRICES.slice(-months);
-
-    recentPrices.forEach(({ date, price }) => {
-      const usdValue = solAmount * price;
-      const tier = this.getTierForUSD(usdValue);
-
-      const [year, month] = date.split('-');
-      const dateObj = new Date(parseInt(year), parseInt(month) - 1);
-      const label = dateObj.toLocaleDateString('en-US', { month: 'short', year: '2-digit' });
-
-      timeline.push({
-        date,
-        label,
-        solPrice: price,
-        usdValue,
-        tier,
-        tierIndex: PROPERTY_TIERS.indexOf(tier),
-        isPast: true,
-        isCurrent: date === '2026-02',
-      });
-    });
-
-    // Future projections (+20%, +50%, +100%)
-    const projections = [
-      { multiplier: 1.2, label: '+20%' },
-      { multiplier: 1.5, label: '+50%' },
-      { multiplier: 2.0, label: '+100%' },
-    ];
-
-    projections.forEach(({ multiplier, label }) => {
-      const projectedPrice = currentSolPrice * multiplier;
-      const usdValue = solAmount * projectedPrice;
-      const tier = this.getTierForUSD(usdValue);
-
-      timeline.push({
-        date: `future_${label}`,
-        label,
-        solPrice: projectedPrice,
-        usdValue,
-        tier,
-        tierIndex: PROPERTY_TIERS.indexOf(tier),
-        isPast: false,
-        isCurrent: false,
-        isFuture: true,
-      });
-    });
-
-    return timeline;
+  getPercentile(solAmount) {
+    if (solAmount >= 500000) return 0.001;
+    if (solAmount >= 150000) return 0.01;
+    if (solAmount >= 50000) return 0.1;
+    if (solAmount >= 10000) return 1;
+    if (solAmount >= 3500) return 5;
+    if (solAmount >= 1250) return 10;
+    if (solAmount >= 250) return 20;
+    if (solAmount >= 50) return 40;
+    if (solAmount >= 10) return 60;
+    return 80;
   }
 }
 

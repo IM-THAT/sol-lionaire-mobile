@@ -1,266 +1,148 @@
-import React, { useState } from 'react';
-import {
-  View, Text, ScrollView, StyleSheet,
-  TouchableOpacity, Switch, Linking, Alert,
-} from 'react-native';
-import { useRealWalletConnection } from '../hooks/useRealWalletConnection';
-import { Colors, Typography, Spacing, BorderRadius } from '../styles/theme';
+/**
+ * More Screen - Sol-lionaire
+ * Legal Disclaimer + Settings
+ */
+import React from 'react';
+import { View, Text, ScrollView, StyleSheet, Linking, TouchableOpacity } from 'react-native';
+import { LinearGradient } from 'expo-linear-gradient';
 
-const APP_VERSION = '0.4.0';
-const HACKATHON = 'MONOLITH 2026';
+const P = {
+  black:    '#0A0A0A',
+  charcoal: '#141414',
+  dark:     '#1C1C1C',
+  mid:      '#2A2A2A',
+  gray:     '#888888',
+  offWhite: '#F5F0E8',
+  gold:     '#C9A84C',
+  goldLight:'#E8C96A',
+  goldDeep: '#A07830',
+};
+
+const Section = ({ title, children }) => (
+  <View style={s.section}>
+    <Text style={s.eyebrow}>{title}</Text>
+    <LinearGradient colors={[P.dark, P.charcoal]} style={s.card}>
+      {children}
+    </LinearGradient>
+  </View>
+);
+
+const Row = ({ label, value, onPress, isLast }) => (
+  <TouchableOpacity
+    style={[s.row, !isLast && s.rowBorder]}
+    onPress={onPress}
+    disabled={!onPress}
+    activeOpacity={onPress ? 0.6 : 1}
+  >
+    <Text style={s.rowLabel}>{label}</Text>
+    <Text style={[s.rowValue, onPress && { color: P.gold }]}>{value}</Text>
+  </TouchableOpacity>
+);
 
 export default function MoreScreen() {
-  const { walletAddress, isConnected, disconnectWallet, walletName } = useRealWalletConnection();
-  const [notificationsEnabled, setNotificationsEnabled] = useState(true);
-  const [devMode, setDevMode] = useState(false);
-
-  const SettingRow = ({ icon, title, subtitle, onPress, rightElement }) => (
-    <TouchableOpacity
-      style={styles.settingRow}
-      onPress={onPress}
-      disabled={!onPress}
-    >
-      <Text style={styles.settingIcon}>{icon}</Text>
-      <View style={styles.settingContent}>
-        <Text style={styles.settingTitle}>{title}</Text>
-        {subtitle && <Text style={styles.settingSubtitle}>{subtitle}</Text>}
-      </View>
-      {rightElement && <View style={styles.settingRight}>{rightElement}</View>}
-      {onPress && !rightElement && <Text style={styles.settingArrow}>›</Text>}
-    </TouchableOpacity>
-  );
-
   return (
-    <View style={styles.container}>
-      <View style={styles.header}>
-        <Text style={styles.title}>⚙️ More</Text>
-        <Text style={styles.subtitle}>Settings & Info</Text>
-      </View>
+    <LinearGradient colors={[P.black, P.charcoal]} style={s.flex}>
 
-      <ScrollView style={styles.scroll} contentContainerStyle={styles.content}>
+      {/* Header */}
+      <LinearGradient colors={[P.charcoal, P.dark]} style={s.header}>
+        <Text style={s.eyebrow}>SETTINGS & LEGAL</Text>
+        <Text style={s.headerTitle}>More</Text>
+      </LinearGradient>
 
-        {/* Wallet Section */}
-        <Text style={styles.sectionTitle}>WALLET</Text>
-        <View style={styles.card}>
-          {isConnected ? (
-            <>
-              <SettingRow
-                icon="💼"
-                title={walletName || 'Connected Wallet'}
-                subtitle={walletAddress ? `${walletAddress.slice(0, 8)}...${walletAddress.slice(-8)}` : ''}
-              />
-              <View style={styles.divider} />
-              <SettingRow
-                icon="🔌"
-                title="Disconnect Wallet"
-                subtitle="Sign out from current wallet"
-                onPress={() => {
-                  Alert.alert(
-                    'Disconnect Wallet',
-                    'Are you sure you want to disconnect?',
-                    [
-                      { text: 'Cancel', style: 'cancel' },
-                      { text: 'Disconnect', style: 'destructive', onPress: disconnectWallet },
-                    ]
-                  );
-                }}
-              />
-            </>
-          ) : (
-            <SettingRow
-              icon="🔗"
-              title="Connect Wallet"
-              subtitle="Go to Home tab to connect"
-            />
-          )}
-        </View>
+      <ScrollView contentContainerStyle={s.scroll}>
 
-        {/* Preferences */}
-        <Text style={styles.sectionTitle}>PREFERENCES</Text>
-        <View style={styles.card}>
-          <SettingRow
-            icon="🔔"
-            title="Notifications"
-            subtitle="Location rewards and price alerts"
-            rightElement={
-              <Switch
-                value={notificationsEnabled}
-                onValueChange={setNotificationsEnabled}
-                trackColor={{ false: '#333', true: Colors.gold }}
-                thumbColor={Colors.white}
-              />
-            }
-          />
-          <View style={styles.divider} />
-          <SettingRow
-            icon="🧪"
-            title="Developer Mode"
-            subtitle="Show debug info and mock data"
-            rightElement={
-              <Switch
-                value={devMode}
-                onValueChange={setDevMode}
-                trackColor={{ false: '#333', true: Colors.gold }}
-                thumbColor={Colors.white}
-              />
-            }
-          />
-        </View>
-
-        {/* Network */}
-        <Text style={styles.sectionTitle}>NETWORK</Text>
-        <View style={styles.card}>
-          <SettingRow
-            icon="🌐"
-            title="Solana Network"
-            subtitle="Devnet (Testing)"
-          />
-          <View style={styles.divider} />
-          <SettingRow
-            icon="📡"
-            title="Price Feed"
-            subtitle="Pyth Network (Live)"
-          />
-          <View style={styles.divider} />
-          <SettingRow
-            icon="🎨"
-            title="NFT Standard"
-            subtitle="Metaplex Bubblegum (cNFT)"
-          />
-        </View>
+        {/* App Info */}
+        <Section title="APPLICATION">
+          <Row label="Version"        value="0.4.0 (Beta)" isLast={false} />
+          <Row label="Network"        value="Solana Devnet" isLast={false} />
+          <Row label="Price Oracle"   value="Pyth Network" isLast={false} />
+          <Row label="Swap Protocol"  value="Jupiter v6" isLast={true} />
+        </Section>
 
         {/* Legal Disclaimer */}
-        <Text style={styles.sectionTitle}>LEGAL</Text>
-        <View style={styles.legalCard}>
-          <Text style={styles.legalTitle}>⚖️ Legal Disclaimer</Text>
-          <Text style={styles.legalText}>
-            Sol-lionaire is an entertainment and educational application. All real estate valuations displayed within this application are purely illustrative and based on publicly available market data.
-          </Text>
-          <Text style={styles.legalText}>
-            Nothing in this application constitutes legal ownership, title, or any proprietary interest in real property. The application does not facilitate, represent, or guarantee any real estate transactions.
-          </Text>
-          <Text style={styles.legalText}>
-            Cryptocurrency values are highly volatile. SOL/USD price data is sourced from Pyth Network and may not reflect current market conditions. Past performance does not guarantee future results.
-          </Text>
-          <Text style={styles.legalText}>
-            NFTs minted within this application represent digital collectibles only and confer no rights, title, or interest in any physical real estate asset.
-          </Text>
-          <Text style={styles.legalSignature}>
-            — Prepared with legal expertise for informational purposes only.
-          </Text>
-        </View>
+        <Section title="LEGAL DISCLAIMER">
+          <View style={s.disclaimerWrap}>
+            <LinearGradient
+              colors={[P.goldDeep, P.gold, P.goldLight, P.gold, P.goldDeep]}
+              start={{ x: 0, y: 0 }} end={{ x: 1, y: 0 }}
+              style={s.accentLine}
+            />
+            <Text style={s.disclaimerTitle}>Simulation Notice</Text>
+            <Text style={s.disclaimerBody}>
+              Sol-lionaire is a visualization tool for entertainment only. All valuations are simulations and do not represent actual ownership or investment advice. Users are solely responsible for blockchain transactions and regulatory compliance.
+            </Text>
+            <Text style={s.disclaimerBody}>
+              Real estate valuations based on Feb 2024 market averages: Manhattan ($22,000/m²), Dubai ($7,500/m²).
+            </Text>
+            <View style={s.divider} />
+          </View>
 
-        {/* About */}
-        <Text style={styles.sectionTitle}>ABOUT</Text>
-        <View style={styles.card}>
-          <SettingRow
-            icon="🏆"
-            title="MONOLITH Hackathon 2026"
-            subtitle="Solana Mobile Track"
+        </Section>
+        {/* Links */}
+        <Section title="RESOURCES">
+          <Row
+            label="Solana"
+            value="solana.com →"
+            onPress={() => Linking.openURL('https://solana.com')}
+            isLast={false}
           />
-          <View style={styles.divider} />
-          <SettingRow
-            icon="📱"
-            title="Optimized for Seeker Phone"
-            subtitle="Solana Mobile Stack"
+          <Row
+            label="Pyth Network"
+            value="pyth.network →"
+            onPress={() => Linking.openURL('https://pyth.network')}
+            isLast={false}
           />
-          <View style={styles.divider} />
-          <SettingRow
-            icon="ℹ️"
-            title={`Version ${APP_VERSION}`}
-            subtitle="Sol-lionaire v0.4"
+          <Row
+            label="Jupiter"
+            value="jup.ag →"
+            onPress={() => Linking.openURL('https://jup.ag')}
+            isLast={true}
           />
-          <View style={styles.divider} />
-          <SettingRow
-            icon="🐙"
-            title="GitHub"
-            subtitle="github.com/MinjiLee-gloria/sol-lionaire-mobile"
-            onPress={() => Linking.openURL('https://github.com/MinjiLee-gloria/sol-lionaire-mobile')}
-          />
-        </View>
+        </Section>
 
-        {/* Bottom padding */}
-        <View style={{ height: 20 }} />
-
+        <View style={{ height: 60 }} />
       </ScrollView>
-    </View>
+    </LinearGradient>
   );
 }
 
-const styles = StyleSheet.create({
-  container: { flex: 1, backgroundColor: Colors.black },
+const s = StyleSheet.create({
+  flex:       { flex: 1 },
   header: {
-    paddingTop: 60,
-    paddingBottom: 20,
-    paddingHorizontal: Spacing.lg,
-    backgroundColor: Colors.darkGray,
-    borderBottomWidth: 1,
-    borderBottomColor: Colors.gold,
-    alignItems: 'center',
+    paddingTop: 60, paddingBottom: 20, paddingHorizontal: 24,
+    alignItems: 'center', borderBottomWidth: 1, borderBottomColor: P.gold,
   },
-  title: { fontSize: Typography.xxl, fontWeight: Typography.bold, color: Colors.gold },
-  subtitle: { fontSize: Typography.sm, color: Colors.lightGray, marginTop: 4 },
-  scroll: { flex: 1 },
-  content: { padding: Spacing.lg },
+  eyebrow: { fontSize: 10, color: P.gold, letterSpacing: 4, fontWeight: '600', marginBottom: 4 },
+  headerTitle: { fontSize: 22, color: P.offWhite, fontWeight: '300', letterSpacing: 1 },
+  scroll: { padding: 16 },
 
-  sectionTitle: {
-    fontSize: Typography.xs,
-    fontWeight: Typography.bold,
-    color: Colors.lightGray,
-    letterSpacing: 1.5,
-    marginBottom: Spacing.sm,
-    marginTop: Spacing.lg,
-    marginLeft: Spacing.sm,
-  },
-
+  section: { marginBottom: 24 },
   card: {
-    backgroundColor: Colors.darkGray,
-    borderRadius: BorderRadius.xl,
-    borderWidth: 1,
-    borderColor: '#333',
-    overflow: 'hidden',
+    borderRadius: 16, borderWidth: 1,
+    borderColor: '#2A2A2A', overflow: 'hidden',
   },
 
-  settingRow: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    padding: Spacing.base,
-    gap: Spacing.md,
+  row: {
+    flexDirection: 'row', justifyContent: 'space-between',
+    alignItems: 'center', paddingVertical: 14, paddingHorizontal: 16,
   },
-  settingIcon: { fontSize: 22, width: 30, textAlign: 'center' },
-  settingContent: { flex: 1 },
-  settingTitle: { fontSize: Typography.base, color: Colors.white, fontWeight: Typography.medium },
-  settingSubtitle: { fontSize: Typography.sm, color: Colors.lightGray, marginTop: 2 },
-  settingRight: { marginLeft: Spacing.sm },
-  settingArrow: { fontSize: Typography.xl, color: Colors.lightGray },
+  rowBorder: { borderBottomWidth: 1, borderBottomColor: P.mid },
+  rowLabel: { fontSize: 14, color: P.offWhite },
+  rowValue: { fontSize: 13, color: P.gray },
 
-  divider: { height: 1, backgroundColor: '#333', marginLeft: 56 },
-
-  // Legal
-  legalCard: {
-    backgroundColor: Colors.darkGray,
-    borderRadius: BorderRadius.xl,
-    padding: Spacing.lg,
-    borderWidth: 1,
-    borderColor: '#444',
+  disclaimerWrap: { padding: 20, position: 'relative', overflow: 'hidden' },
+  accentLine: { position: 'absolute', top: 0, left: 0, right: 0, height: 2 },
+  disclaimerTitle: {
+    fontSize: 16, color: P.gold, fontWeight: '600',
+    letterSpacing: 0.5, marginBottom: 8, marginTop: 8,
   },
-  legalTitle: {
-    fontSize: Typography.lg,
-    fontWeight: Typography.bold,
-    color: Colors.gold,
-    marginBottom: Spacing.md,
+  disclaimerHeading: {
+    fontSize: 13, color: P.offWhite, fontWeight: '600',
+    letterSpacing: 0.3, marginBottom: 6,
   },
-  legalText: {
-    fontSize: Typography.sm,
-    color: Colors.lightGray,
-    lineHeight: 20,
-    marginBottom: Spacing.md,
+  disclaimerBody: {
+    fontSize: 12, color: P.gray, lineHeight: 20,
+    letterSpacing: 0.2, marginBottom: 4,
   },
-  legalSignature: {
-    fontSize: Typography.sm,
-    color: Colors.gold,
-    fontStyle: 'italic',
-    marginTop: Spacing.sm,
-    textAlign: 'right',
-  },
+  divider: { height: 1, backgroundColor: P.mid, marginVertical: 14 },
 });
