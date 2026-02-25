@@ -11,6 +11,7 @@ import { priceDataService } from '../services/pythPriceService';
 import CalculatingAnimation from '../components/CalculatingAnimation';
 import ResultCard from '../components/ResultCard';
 import { Colors, Typography, Spacing, BorderRadius } from '../styles/theme';
+import HeroSection from '../components/HeroSection';
 
 const CITIES = [
   { key: CityType.MANHATTAN, label: 'Manhattan', emoji: '🗽', country: 'USA' },
@@ -84,6 +85,12 @@ export default function HomeScreen() {
   const [showPicker,     setShowPicker]     = useState(false);
 
   useEffect(() => { loadPrices(); }, [selectedCity]);
+  useEffect(() => {
+    if (isConnected && balance !== null) {
+      handleCalculate();
+    }
+  }, [isConnected, selectedCity]);
+
 
   const loadPrices = async () => {
     try {
@@ -143,12 +150,7 @@ export default function HomeScreen() {
   return (
     <View style={styles.container}>
       <StatusBar barStyle="light-content" />
-
-      {/* Header */}
-      <View style={styles.header}>
-        <Text style={styles.logo}>Sol-lionaire</Text>
-        <Text style={styles.tagline}>Crypto → Real Estate</Text>
-      </View>
+      <HeroSection />
 
       <ScrollView style={styles.scroll} contentContainerStyle={styles.content}>
 
@@ -213,7 +215,7 @@ export default function HomeScreen() {
                 <TouchableOpacity
                   key={city.key}
                   style={[styles.cityButton, selectedCity === city.key && styles.cityButtonActive]}
-                  onPress={() => { setSelectedCity(city.key); setMappingResult(null); setUpgradeInfo(null); }}
+                  onPress={() => setSelectedCity(city.key)}
                 >
                   <Text style={styles.cityEmoji}>{city.emoji}</Text>
                   <Text style={[styles.cityLabel, selectedCity === city.key && styles.cityLabelActive]}>
@@ -225,19 +227,6 @@ export default function HomeScreen() {
             </View>
           </View>
         )}
-
-        {/* Calculate Button */}
-        <TouchableOpacity
-          style={styles.calculateButton}
-          onPress={handleCalculate}
-          disabled={isCalculating}
-        >
-          <Text style={styles.calculateButtonText}>
-            🏠 Calculate My Territory
-          </Text>
-        </TouchableOpacity>
-
-        {/* Result */}
         {mappingResult && !isCalculating && (
           <ResultCard mappingResult={mappingResult} />
         )}

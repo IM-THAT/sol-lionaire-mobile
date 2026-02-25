@@ -3,7 +3,7 @@
  * 5-Tier Result Display
  */
 import React from 'react';
-import { View, Text, StyleSheet } from 'react-native';
+import { View, Text, StyleSheet, Image } from 'react-native';
 import { LinearGradient } from 'expo-linear-gradient';
 
 const P = {
@@ -18,10 +18,25 @@ const P = {
   goldDeep: '#A07830',
 };
 
+// Image mapping
+const PROPERTY_IMAGES = {
+  ny_level1: require("../../assets/images/properties/ny_level1.png"),
+  ny_level2: require("../../assets/images/properties/ny_level2.png"),
+  ny_level3: require("../../assets/images/properties/ny_level3.png"),
+  ny_level4: require("../../assets/images/properties/ny_level4.png"),
+  ny_level5: require("../../assets/images/properties/ny_level5.png"),
+  ny_level6: require("../../assets/images/properties/ny_level6.png"),
+  ny_level7: require("../../assets/images/properties/ny_level7.png"),
+  ny_level8: require("../../assets/images/properties/ny_level8.png"),
+  ny_level9: require("../../assets/images/properties/ny_level9.png"),
+  ny_level10: require("../../assets/images/properties/ny_level10.png"),
+};
+
+
 const ResultCard = ({ mappingResult }) => {
   if (!mappingResult) return null;
-
   const { tier, level, propertyName, location, totalValue, sqm, narrative, starProgress } = mappingResult;
+  const imageSource = tier.imageKey ? PROPERTY_IMAGES[tier.imageKey.MANHATTAN] : null;
 
   return (
     <LinearGradient
@@ -33,6 +48,14 @@ const ResultCard = ({ mappingResult }) => {
         start={{ x: 0, y: 0 }} end={{ x: 1, y: 0 }}
         style={s.accentLine}
       />
+
+      {imageSource && (
+        <Image
+          source={imageSource}
+          style={s.propertyImage}
+          resizeMode="contain"
+        />
+      )}
 
       <View style={s.header}>
         <Text style={s.eyebrow}>LEVEL {level || tier.level} • {starProgress?.starsDisplay || "★☆☆"}</Text>
@@ -68,6 +91,7 @@ const s = StyleSheet.create({
   card: { borderRadius: 20, borderWidth: 2, padding: 24, marginTop: 24, overflow: 'hidden' },
   accentLine: { position: 'absolute', top: 0, left: 0, right: 0, height: 2 },
   header: { alignItems: 'center', marginBottom: 20 },
+  propertyImage: { width: '100%', height: 250, borderRadius: 12, marginBottom: 16 },
   eyebrow: { fontSize: 10, color: P.gold, letterSpacing: 4, fontWeight: '600', marginBottom: 8 },
   propertyName: { fontSize: 24, fontWeight: '700', color: P.offWhite, letterSpacing: 0.5, marginBottom: 8, textAlign: 'center' },
   location: { fontSize: 13, color: P.gray, letterSpacing: 0.5 },
