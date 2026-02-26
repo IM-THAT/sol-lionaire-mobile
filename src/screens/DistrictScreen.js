@@ -1,21 +1,20 @@
 /**
  * DistrictScreen — The District
- * Tab 3: Level-gated community hub
+ * Tab 3: Level-gated community hub (MVP concept screen)
  *
  * The Plaza      (Lvl 1–3)  — Open to all
  * The Avenue     (Lvl 4–7)  — Premium holders
  * The High Table (Lvl 8–10) — VVIP apex
+ *
+ * NOTE: Community features (posts, chat, photos) require a backend.
+ * This screen shows the tier-gated structure and Coming Soon state.
  */
 import React from 'react';
-import {
-  View, Text, ScrollView, StyleSheet, Dimensions,
-} from 'react-native';
+import { View, Text, ScrollView, StyleSheet } from 'react-native';
 import { LinearGradient } from 'expo-linear-gradient';
 import { Ionicons } from '@expo/vector-icons';
 import { useWallet } from '../context/WalletContext';
 import { valueCalculator } from '../services/valueCalculator';
-
-const { width: W } = Dimensions.get('window');
 
 const P = {
   black:    '#000000',
@@ -29,7 +28,6 @@ const P = {
   goldDeep: '#A07830',
 };
 
-// ── District definitions (displayed top → bottom: highest first) ──────────────
 const DISTRICTS = [
   {
     id: 'high_table',
@@ -39,12 +37,6 @@ const DISTRICTS = [
     description: 'Where the skyline meets sovereignty.\nThe apex of the Sol-lionaire world.',
     vibe: 'Central Park Penthouse · Burj Khalifa District',
     accentColors: [P.goldDeep, P.gold, P.goldLight, P.gold, P.goldDeep],
-    memberCount: '12',
-    feed: [
-      { addr: 'F3mP…xJ9K', action: 'claimed The Landmark Apex on Solana', time: '2h' },
-      { addr: '9XhR…mN4L', action: 'entered The High Table', time: '5h' },
-      { addr: 'KqW7…pB2Y', action: 'ascended to Level 9', time: '1d' },
-    ],
   },
   {
     id: 'avenue',
@@ -54,12 +46,6 @@ const DISTRICTS = [
     description: 'Fifth Avenue meets Sheikh Zayed Road.\nReal holders, real conversations.',
     vibe: 'SoHo Loft · Palm Jumeirah Frond',
     accentColors: ['#5A3A10', '#8A5820', P.gold, '#8A5820', '#5A3A10'],
-    memberCount: '89',
-    feed: [
-      { addr: '2mVs…rC6T', action: 'claimed The Prime 2-Bed on Solana', time: '30m' },
-      { addr: 'NpXk…wA3D', action: 'switched to Dubai territory', time: '1h' },
-      { addr: 'Hj4Z…bQ8E', action: 'ascended to Level 5', time: '3h' },
-    ],
   },
   {
     id: 'plaza',
@@ -69,12 +55,6 @@ const DISTRICTS = [
     description: 'The starting point of every empire.\nShare strategies and rise together.',
     vibe: 'Central Park · Dubai Marina Walk',
     accentColors: ['#333333', '#555555', '#777777', '#555555', '#333333'],
-    memberCount: '1,247',
-    feed: [
-      { addr: '7gh5…Q5LX', action: 'claimed Level 1 on Solana', time: '5m' },
-      { addr: 'BvR3…yM7W', action: 'connected their wallet', time: '12m' },
-      { addr: 'Lk9F…nS5P', action: 'ascended to Level 2', time: '45m' },
-    ],
   },
 ];
 
@@ -84,31 +64,9 @@ const getUserDistrictId = (level) => {
   return 'plaza';
 };
 
-// ── Feed Entry ────────────────────────────────────────────────────────────────
-const FeedEntry = ({ entry }) => (
-  <View style={fe.row}>
-    <View style={fe.dot} />
-    <View style={fe.content}>
-      <Text style={fe.addr}>{entry.addr}</Text>
-      <Text style={fe.action}>{entry.action}</Text>
-    </View>
-    <Text style={fe.time}>{entry.time}</Text>
-  </View>
-);
-
-const fe = StyleSheet.create({
-  row:     { flexDirection: 'row', alignItems: 'flex-start', paddingHorizontal: 16, paddingBottom: 14 },
-  dot:     { width: 5, height: 5, borderRadius: 2.5, backgroundColor: P.gold, marginTop: 5, marginRight: 10 },
-  content: { flex: 1 },
-  addr:    { fontSize: 11, color: P.goldLight, fontWeight: '700', marginBottom: 2 },
-  action:  { fontSize: 12, color: P.gray },
-  time:    { fontSize: 10, color: P.border, marginLeft: 8, marginTop: 2 },
-});
-
 // ── District Card ─────────────────────────────────────────────────────────────
 const DistrictCard = ({ district, isLocked, isCurrent }) => (
   <View style={[dc.wrap, isCurrent && dc.wrapCurrent, isLocked && dc.wrapLocked]}>
-    {/* Accent stripe */}
     <LinearGradient
       colors={isLocked ? ['#252525', '#333333', '#252525'] : district.accentColors}
       start={{ x: 0, y: 0 }} end={{ x: 1, y: 0 }}
@@ -142,52 +100,36 @@ const DistrictCard = ({ district, isLocked, isCurrent }) => (
       )}
     </View>
 
-    {/* Description */}
     <Text style={[dc.desc, isLocked && dc.dimText]}>{district.description}</Text>
     <Text style={[dc.vibe, isLocked ? dc.dimText : { color: P.border }]}>{district.vibe}</Text>
 
     <View style={dc.divider} />
 
     {isLocked ? (
-      /* Locked state */
-      <View style={dc.lockedFooter}>
+      <View style={dc.footer}>
         <Ionicons name="lock-closed-outline" size={13} color={P.gold} />
-        <Text style={dc.lockedMsg}>  Reach Level {district.minLevel} to enter this district</Text>
+        <Text style={dc.lockedMsg}>  Reach Level {district.minLevel} to enter</Text>
       </View>
     ) : (
-      /* Accessible state */
-      <>
-        <View style={dc.statsRow}>
-          <Text style={dc.statNum}>{district.memberCount}</Text>
-          <Text style={dc.statLabel}> Active Members</Text>
-        </View>
-
-        <Text style={dc.feedLabel}>RECENT ACTIVITY</Text>
-        {district.feed.map((entry, i) => (
-          <FeedEntry key={i} entry={entry} />
-        ))}
-      </>
+      <View style={dc.footer}>
+        <Ionicons name="time-outline" size={13} color={P.gray} />
+        <Text style={dc.comingSoonMsg}>  Community features coming soon</Text>
+      </View>
     )}
   </View>
 );
 
 const dc = StyleSheet.create({
   wrap: {
-    marginHorizontal: 16,
-    marginTop: 12,
-    borderRadius: 16,
-    borderWidth: 1,
-    borderColor: P.border,
-    backgroundColor: P.dark,
-    overflow: 'hidden',
+    marginHorizontal: 16, marginTop: 12,
+    borderRadius: 16, borderWidth: 1, borderColor: P.border,
+    backgroundColor: P.dark, overflow: 'hidden',
   },
   wrapCurrent: {
     borderColor: P.gold,
     shadowColor: P.gold,
     shadowOffset: { width: 0, height: 0 },
-    shadowOpacity: 0.35,
-    shadowRadius: 14,
-    elevation: 10,
+    shadowOpacity: 0.35, shadowRadius: 14, elevation: 10,
   },
   wrapLocked: { opacity: 0.5 },
   accent: { height: 2 },
@@ -209,13 +151,9 @@ const dc = StyleSheet.create({
   vibe:    { fontSize: 11, paddingHorizontal: 16, marginBottom: 16, fontStyle: 'italic' },
   divider: { height: 1, backgroundColor: P.border, marginHorizontal: 16, marginBottom: 14 },
 
-  lockedFooter: { flexDirection: 'row', alignItems: 'center', paddingHorizontal: 16, paddingBottom: 16 },
-  lockedMsg:    { fontSize: 12, color: P.gray, fontStyle: 'italic' },
-
-  statsRow:  { flexDirection: 'row', alignItems: 'baseline', paddingHorizontal: 16, marginBottom: 14 },
-  statNum:   { fontSize: 22, fontWeight: '700', color: P.offWhite },
-  statLabel: { fontSize: 12, color: P.gray },
-  feedLabel: { fontSize: 9, color: P.gold, letterSpacing: 3, fontWeight: '600', paddingHorizontal: 16, marginBottom: 10 },
+  footer:        { flexDirection: 'row', alignItems: 'center', paddingHorizontal: 16, paddingBottom: 16 },
+  lockedMsg:     { fontSize: 12, color: P.gray, fontStyle: 'italic' },
+  comingSoonMsg: { fontSize: 12, color: P.gray, fontStyle: 'italic' },
 });
 
 // ── Empty State ───────────────────────────────────────────────────────────────
@@ -239,10 +177,10 @@ export default function DistrictScreen() {
 
   if (!isConnected) return <EmptyState />;
 
-  const tier          = valueCalculator.getTierForSOL(balance || 0);
-  const userLevel     = tier.level;
+  const tier           = valueCalculator.getTierForSOL(balance || 0);
+  const userLevel      = tier.level;
   const userDistrictId = getUserDistrictId(userLevel);
-  const userDistrict  = DISTRICTS.find(d => d.id === userDistrictId);
+  const userDistrict   = DISTRICTS.find(d => d.id === userDistrictId);
 
   return (
     <View style={s.root}>
@@ -261,12 +199,19 @@ export default function DistrictScreen() {
         </LinearGradient>
       </LinearGradient>
 
-      {/* District cards (High Table → Avenue → Plaza) */}
       <ScrollView
         showsVerticalScrollIndicator={false}
         style={s.scroll}
         contentContainerStyle={s.scrollContent}
       >
+        {/* Concept notice */}
+        <View style={s.notice}>
+          <Text style={s.noticeText}>
+            Community features — posts, photos, and chat — are coming in a future update.
+            Your district is determined by your SOL level.
+          </Text>
+        </View>
+
         {DISTRICTS.map(district => (
           <DistrictCard
             key={district.id}
@@ -284,12 +229,8 @@ export default function DistrictScreen() {
 const s = StyleSheet.create({
   root:   { flex: 1, backgroundColor: P.black },
   header: {
-    paddingTop: 56,
-    paddingBottom: 20,
-    paddingHorizontal: 24,
-    alignItems: 'center',
-    borderBottomWidth: 1,
-    borderBottomColor: P.gold,
+    paddingTop: 56, paddingBottom: 20, paddingHorizontal: 24,
+    alignItems: 'center', borderBottomWidth: 1, borderBottomColor: P.gold,
   },
   headerEye:   { fontSize: 9, color: P.gold, letterSpacing: 4, fontWeight: '600', marginBottom: 4 },
   headerTitle: { fontSize: 26, color: P.offWhite, fontWeight: '300', letterSpacing: 2, marginBottom: 14 },
@@ -298,4 +239,11 @@ const s = StyleSheet.create({
 
   scroll:        { flex: 1 },
   scrollContent: { paddingTop: 16, paddingBottom: 20 },
+
+  notice: {
+    marginHorizontal: 16, marginBottom: 4,
+    padding: 14, backgroundColor: '#0F0F0F',
+    borderRadius: 12, borderWidth: 1, borderColor: P.border,
+  },
+  noticeText: { fontSize: 12, color: P.gray, lineHeight: 18, textAlign: 'center' },
 });

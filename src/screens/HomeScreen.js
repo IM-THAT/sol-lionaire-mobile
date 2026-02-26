@@ -330,8 +330,8 @@ export default function HomeScreen() {
             <DefaultBadge />
           )}
 
-          {/* Identity Label */}
-          {isConnected && mappingResult ? (
+          {/* Identity Label — only shown when connected and result available */}
+          {isConnected && mappingResult && (
             <LinearGradient
               colors={[P.goldDeep, P.gold, P.goldLight, P.gold, P.goldDeep]}
               start={{ x: 0, y: 0 }} end={{ x: 1, y: 0 }}
@@ -339,8 +339,6 @@ export default function HomeScreen() {
             >
               <Text style={s.identityText} numberOfLines={2}>{titleText}</Text>
             </LinearGradient>
-          ) : (
-            <Text style={s.identityEmpty}>{titleText}</Text>
           )}
 
           {/* Percentile badge */}
