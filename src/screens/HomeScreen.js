@@ -52,6 +52,16 @@ const PROPERTY_IMAGES = {
   ny_level8:  require('../../assets/images/properties/ny_level8.png'),
   ny_level9:  require('../../assets/images/properties/ny_level9.png'),
   ny_level10: require('../../assets/images/properties/ny_level10.png'),
+  db_level1:  require('../../assets/images/properties/db_level1.png'),
+  db_level2:  require('../../assets/images/properties/db_level2.png'),
+  db_level3:  require('../../assets/images/properties/db_level3.png'),
+  db_level4:  require('../../assets/images/properties/db_level4.png'),
+  db_level5:  require('../../assets/images/properties/db_level5.png'),
+  db_level6:  require('../../assets/images/properties/db_level6.png'),
+  db_level7:  require('../../assets/images/properties/db_level7.png'),
+  db_level8:  require('../../assets/images/properties/db_level8.png'),
+  db_level9:  require('../../assets/images/properties/db_level9.png'),
+  db_level10: require('../../assets/images/properties/db_level10.png'),
 };
 
 const CITIES = [

@@ -61,7 +61,7 @@ export const PROPERTY_TIERS = [
     },
     imageKey: {
       MANHATTAN: 'ny_level1',
-      DUBAI: 'ny_level1',
+      DUBAI: 'db_level1',
     },
   },
   {
@@ -91,7 +91,7 @@ export const PROPERTY_TIERS = [
     },
     imageKey: {
       MANHATTAN: 'ny_level2',
-      DUBAI: 'ny_level2',
+      DUBAI: 'db_level2',
     },
   },
   {
@@ -121,7 +121,7 @@ export const PROPERTY_TIERS = [
     },
     imageKey: {
       MANHATTAN: 'ny_level3',
-      DUBAI: 'ny_level3',
+      DUBAI: 'db_level3',
     },
   },
   {
@@ -151,7 +151,7 @@ export const PROPERTY_TIERS = [
     },
     imageKey: {
       MANHATTAN: 'ny_level4',
-      DUBAI: 'ny_level4',
+      DUBAI: 'db_level4',
     },
   },
   {
@@ -181,7 +181,7 @@ export const PROPERTY_TIERS = [
     },
     imageKey: {
       MANHATTAN: 'ny_level5',
-      DUBAI: 'ny_level5',
+      DUBAI: 'db_level5',
     },
   },
   {
@@ -211,7 +211,7 @@ export const PROPERTY_TIERS = [
     },
     imageKey: {
       MANHATTAN: 'ny_level6',
-      DUBAI: 'ny_level6',
+      DUBAI: 'db_level6',
     },
   },
   {
@@ -241,7 +241,7 @@ export const PROPERTY_TIERS = [
     },
     imageKey: {
       MANHATTAN: 'ny_level7',
-      DUBAI: 'ny_level7',
+      DUBAI: 'db_level7',
     },
   },
   {
@@ -271,7 +271,7 @@ export const PROPERTY_TIERS = [
     },
     imageKey: {
       MANHATTAN: 'ny_level8',
-      DUBAI: 'ny_level8',
+      DUBAI: 'db_level8',
     },
   },
   {
@@ -301,7 +301,7 @@ export const PROPERTY_TIERS = [
     },
     imageKey: {
       MANHATTAN: 'ny_level9',
-      DUBAI: 'ny_level9',
+      DUBAI: 'db_level9',
     },
   },
   {
@@ -331,7 +331,7 @@ export const PROPERTY_TIERS = [
     },
     imageKey: {
       MANHATTAN: 'ny_level10',
-      DUBAI: 'ny_level10',
+      DUBAI: 'db_level10',
     },
   },
 ];
