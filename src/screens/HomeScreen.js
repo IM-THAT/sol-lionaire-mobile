@@ -352,22 +352,18 @@ export default function HomeScreen() {
             colors={['rgba(201,168,76,0.08)', 'rgba(0,0,0,0)']}
             style={s.balanceGradient}
           >
-            {isConnected ? (
-              <>
-                <Text style={s.balanceSOL}>
-                  {solBalance.toFixed(4)} <Text style={s.balanceSOLUnit}>SOL</Text>
+            <Text style={s.balanceSOL}>
+                {solBalance.toFixed(4)} <Text style={s.balanceSOLUnit}>SOL</Text>
+              </Text>
+              <Text style={s.balanceUSD}>
+                ≈ ${totalUSD.toLocaleString(undefined, { maximumFractionDigits: 0 })}
+              </Text>
+              {/* Wallet tag */}
+              <View style={s.walletTag}>
+                <Text style={s.walletTagText}>
+                  {walletAddress?.slice(0, 4)}…{walletAddress?.slice(-4)}
                 </Text>
-                <Text style={s.balanceUSD}>
-                  ≈ ${totalUSD.toLocaleString(undefined, { maximumFractionDigits: 0 })}
-                </Text>
-                {/* Wallet tag */}
-                <View style={s.walletTag}>
-                  <Text style={s.walletTagText}>
-                    {walletAddress?.slice(0, 4)}…{walletAddress?.slice(-4)}
-                  </Text>
-                </View>
-              </>
-            )}
+              </View>
           </LinearGradient>
         </View>}
 
