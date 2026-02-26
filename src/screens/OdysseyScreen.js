@@ -356,7 +356,7 @@ export default function OdysseyScreen() {
   const { walletAddress, balance, isConnected } = useWallet();
 
   const [city,        setCity]        = useState(CityType.MANHATTAN);
-  const [solPrice,    setSolPrice]    = useState(150);
+  const [solPrice,    setSolPrice]    = useState(0);
   const [currentTier, setCurrentTier] = useState(null);
   const [upgrade,     setUpgrade]     = useState(null);
 
@@ -378,7 +378,7 @@ export default function OdysseyScreen() {
   const loadData = async () => {
     try {
       const prices = await priceDataService.fetchAllPrices(city);
-      const price  = prices.solPrice || 150;
+      const price  = prices.solPrice || 0;
       setSolPrice(price);
 
       const sol    = balance || 2;

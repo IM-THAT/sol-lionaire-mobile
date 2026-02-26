@@ -159,7 +159,7 @@ export default function MoreScreen() {
         <Section title="APPLICATION">
           <Row label="Version"       value="0.5.0 (Beta)" isLast={false} />
           <Row label="Network"       value="Solana Mainnet" isLast={false} />
-          <Row label="Price Oracle"  value="Pyth Network"   isLast={false} />
+          <Row label="Price Oracle"  value="CoinGecko"      isLast={false} />
           <Row label="Swap Protocol" value="Jupiter v6"     isLast />
         </Section>
 
@@ -184,9 +184,9 @@ export default function MoreScreen() {
             isLast={false}
           />
           <Row
-            label="Pyth Network"
-            value="pyth.network →"
-            onPress={() => Linking.openURL('https://pyth.network')}
+            label="CoinGecko"
+            value="coingecko.com →"
+            onPress={() => Linking.openURL('https://coingecko.com')}
             isLast
           />
         </Section>
