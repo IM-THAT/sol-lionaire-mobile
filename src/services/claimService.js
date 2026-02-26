@@ -33,8 +33,13 @@ export const buildClaimTransaction = ({ tier, city, walletAddress }) => {
   );
 };
 
+// Keep in sync with DEV_MODE in useRealWalletConnection.js
+const DEV_MODE = true;
+
 /**
  * Returns Solana Explorer URL for a given transaction signature.
  */
 export const getExplorerUrl = (sig) =>
-  `https://explorer.solana.com/tx/${sig}`;
+  DEV_MODE
+    ? `https://explorer.solana.com/tx/${sig}?cluster=devnet`
+    : `https://explorer.solana.com/tx/${sig}`;

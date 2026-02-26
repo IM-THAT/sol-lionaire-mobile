@@ -108,7 +108,7 @@ export default function MoreScreen() {
         {/* ── App Info ─────────────────────────────────────────────────── */}
         <Section title="APPLICATION">
           <Row label="Version"       value="0.5.0 (Beta)" isLast={false} />
-          <Row label="Network"       value="Solana Mainnet" isLast={false} />
+          <Row label="Network"       value="Solana Devnet"  isLast={false} />
           <Row label="Price Oracle"  value="CoinGecko"      isLast={false} />
           <Row label="Swap Protocol" value="Jupiter v6"     isLast />
         </Section>

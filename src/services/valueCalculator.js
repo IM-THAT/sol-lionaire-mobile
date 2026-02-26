@@ -37,7 +37,7 @@ export const PROPERTY_TIERS = [
   {
     id: 'level1',
     level: 1,
-    minSOL: 1,
+    minSOL: 0,
     maxSOL: 10,
     minUSD: 140,
     maxUSD: 1480,
@@ -340,7 +340,7 @@ class ValueCalculator {
   getTierForSOL(solAmount) {
     return (
       PROPERTY_TIERS.find(t => solAmount >= t.minSOL && solAmount < t.maxSOL) ||
-      PROPERTY_TIERS[PROPERTY_TIERS.length - 1]
+      PROPERTY_TIERS[0]  // fallback: < 1 SOL → Level 1 (not Level 10)
     );
   }
   
