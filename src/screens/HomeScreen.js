@@ -430,6 +430,10 @@ export default function HomeScreen() {
                 </Text>
               </LinearGradient>
             </TouchableOpacity>
+            <Text style={s.termsText}>
+              By connecting, you acknowledge this app is for entertainment only.{'\n'}
+              See Simulation Notice in More tab.
+            </Text>
           </View>
         )}
 
@@ -694,6 +698,14 @@ const s = StyleSheet.create({
     borderRadius: 12,
   },
   disconnectText: { fontSize: 13, color: P.gray },
+  termsText: {
+    fontSize: 11,
+    color: P.border,
+    textAlign: 'center',
+    marginTop: 14,
+    lineHeight: 17,
+    letterSpacing: 0.3,
+  },
 
   // Off-screen container for share card capture
   offscreen: {

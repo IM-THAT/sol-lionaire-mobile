@@ -7,10 +7,10 @@
  *  - Project Info      : Hackathon details, social links
  *  - Legal Disclaimer
  */
-import React, { useState } from 'react';
+import React from 'react';
 import {
   View, Text, ScrollView, StyleSheet,
-  TouchableOpacity, Linking, Switch,
+  TouchableOpacity, Linking,
 } from 'react-native';
 import { LinearGradient } from 'expo-linear-gradient';
 import { useWallet } from '../context/WalletContext';
@@ -66,42 +66,10 @@ const Row = ({ label, value, onPress, isLast, danger }) => (
   </TouchableOpacity>
 );
 
-// ── Toggle row ────────────────────────────────────────────────────────────────
-const ToggleRow = ({ label, value, onToggle, isLast }) => (
-  <View style={[s.row, !isLast && s.rowBorder]}>
-    <Text style={s.rowLabel}>{label}</Text>
-    <Switch
-      value={value}
-      onValueChange={onToggle}
-      trackColor={{ false: P.border, true: P.goldDeep }}
-      thumbColor={value ? P.gold : P.gray}
-    />
-  </View>
-);
-
-// ── Segmented control row ─────────────────────────────────────────────────────
-const SegmentRow = ({ label, options, selected, onSelect, isLast }) => (
-  <View style={[s.row, !isLast && s.rowBorder]}>
-    <Text style={s.rowLabel}>{label}</Text>
-    <View style={s.segWrap}>
-      {options.map((opt, i) => (
-        <TouchableOpacity
-          key={opt}
-          style={[s.segBtn, selected === opt && s.segActive, i > 0 && { marginLeft: 4 }]}
-          onPress={() => onSelect(opt)}
-        >
-          <Text style={[s.segText, selected === opt && s.segTextActive]}>{opt}</Text>
-        </TouchableOpacity>
-      ))}
-    </View>
-  </View>
-);
 
 // ── Main Screen ───────────────────────────────────────────────────────────────
 export default function MoreScreen() {
   const { walletAddress, isConnected, walletName, disconnectWallet } = useWallet();
-
-  const [notifOn, setNotifOn] = useState(false);
 
   const shortAddr = walletAddress
     ? `${walletAddress.slice(0, 6)}…${walletAddress.slice(-6)}`
@@ -137,16 +105,6 @@ export default function MoreScreen() {
           )}
         </Section>
 
-        {/* ── App Config ───────────────────────────────────────────────── */}
-        <Section title="APP CONFIG">
-          <ToggleRow
-            label="Notifications"
-            value={notifOn}
-            onToggle={setNotifOn}
-            isLast
-          />
-        </Section>
-
         {/* ── App Info ─────────────────────────────────────────────────── */}
         <Section title="APPLICATION">
           <Row label="Version"       value="0.5.0 (Beta)" isLast={false} />
@@ -158,27 +116,9 @@ export default function MoreScreen() {
         {/* ── Project Info ─────────────────────────────────────────────── */}
         <Section title="PROJECT">
           <Row
-            label="Solana Monolith Hackathon"
+            label="Solana Mobile Hackathon"
             value="View →"
-            onPress={() => Linking.openURL('https://solana.com')}
-            isLast={false}
-          />
-          <Row
-            label="Twitter / X"
-            value="Follow →"
-            onPress={() => Linking.openURL('https://x.com')}
-            isLast={false}
-          />
-          <Row
-            label="Jupiter Swap"
-            value="jup.ag →"
-            onPress={openJupiter}
-            isLast={false}
-          />
-          <Row
-            label="CoinGecko"
-            value="coingecko.com →"
-            onPress={() => Linking.openURL('https://coingecko.com')}
+            onPress={() => Linking.openURL('https://solanamobile.radiant.nexus/?panel=hackathon')}
             isLast
           />
         </Section>
