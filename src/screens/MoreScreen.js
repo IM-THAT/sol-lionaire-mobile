@@ -101,8 +101,7 @@ const SegmentRow = ({ label, options, selected, onSelect, isLast }) => (
 export default function MoreScreen() {
   const { walletAddress, isConnected, walletName, disconnectWallet } = useWallet();
 
-  const [language,    setLanguage]    = useState('EN');
-  const [notifOn,     setNotifOn]     = useState(false);
+  const [notifOn, setNotifOn] = useState(false);
 
   const shortAddr = walletAddress
     ? `${walletAddress.slice(0, 6)}…${walletAddress.slice(-6)}`
@@ -140,13 +139,6 @@ export default function MoreScreen() {
 
         {/* ── App Config ───────────────────────────────────────────────── */}
         <Section title="APP CONFIG">
-          <SegmentRow
-            label="Language"
-            options={['EN', 'KO']}
-            selected={language}
-            onSelect={setLanguage}
-            isLast={false}
-          />
           <ToggleRow
             label="Notifications"
             value={notifOn}

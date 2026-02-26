@@ -346,8 +346,8 @@ export default function HomeScreen() {
           )}
         </View>
 
-        {/* ─── Balance Display ──────────────────────────────────────────────── */}
-        <View style={s.balanceCard}>
+        {/* ─── Balance Display (only when connected) ────────────────────────── */}
+        {isConnected && <View style={s.balanceCard}>
           <LinearGradient
             colors={['rgba(201,168,76,0.08)', 'rgba(0,0,0,0)']}
             style={s.balanceGradient}
@@ -367,14 +367,12 @@ export default function HomeScreen() {
                   </Text>
                 </View>
               </>
-            ) : (
-              <Text style={s.balanceEmpty}>—— SOL</Text>
             )}
           </LinearGradient>
-        </View>
+        </View>}
 
-        {/* ─── City Toggle ──────────────────────────────────────────────────── */}
-        <View style={s.cityToggleRow}>
+        {/* ─── City Toggle (only when connected) ───────────────────────────── */}
+        {isConnected && <View style={s.cityToggleRow}>
           {CITIES.map(c => (
             <TouchableOpacity
               key={c.key}
@@ -386,24 +384,26 @@ export default function HomeScreen() {
               </Text>
             </TouchableOpacity>
           ))}
-        </View>
+        </View>}
 
         {/* ─── CTA ──────────────────────────────────────────────────────────── */}
         {isConnected ? (
           <View style={s.ctaArea}>
-            <TouchableOpacity
-              style={s.shareBtn}
-              onPress={handleShare}
-              activeOpacity={0.85}
-            >
-              <LinearGradient
-                colors={[P.goldDeep, P.gold, P.goldLight, P.gold, P.goldDeep]}
-                start={{ x: 0, y: 0 }} end={{ x: 1, y: 0 }}
-                style={s.shareBtnGrad}
+            <View style={s.shareBtnGlow}>
+              <TouchableOpacity
+                style={s.shareBtn}
+                onPress={handleShare}
+                activeOpacity={0.85}
               >
-                <Text style={s.shareBtnText}>Share My Status</Text>
-              </LinearGradient>
-            </TouchableOpacity>
+                <LinearGradient
+                  colors={[P.goldDeep, P.gold, P.goldLight, P.gold, P.goldDeep]}
+                  start={{ x: 0, y: 0 }} end={{ x: 1, y: 0 }}
+                  style={s.shareBtnGrad}
+                >
+                  <Text style={s.shareBtnText}>Share My Status</Text>
+                </LinearGradient>
+              </TouchableOpacity>
+            </View>
 
             <TouchableOpacity
               style={s.disconnectBtn}
@@ -673,6 +673,14 @@ const s = StyleSheet.create({
   // CTA
   ctaArea: { marginHorizontal: 20, gap: 12 },
 
+  shareBtnGlow: {
+    borderRadius: 14,
+    shadowColor: '#C9A84C',
+    shadowOffset: { width: 0, height: 0 },
+    shadowOpacity: 0.85,
+    shadowRadius: 22,
+    elevation: 14,
+  },
   shareBtn:   { borderRadius: 14, overflow: 'hidden' },
   connectBtn: { borderRadius: 14, overflow: 'hidden' },
   shareBtnGrad: { paddingVertical: 18, alignItems: 'center' },

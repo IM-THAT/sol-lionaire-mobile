@@ -84,7 +84,7 @@ const PrevCard = ({ tier, city }) => {
         <View style={pc.overlay}>
           <Text style={pc.eyebrow}>PREVIOUS · LEVEL {tier.level}</Text>
           <Text style={pc.name}>{tier.names[city]}</Text>
-          <Text style={pc.loc}>📍 {tier.locations[city]}</Text>
+          <Text style={pc.loc}>{tier.locations[city]}</Text>
         </View>
       </View>
     </View>
@@ -120,7 +120,6 @@ const CurrentCard = ({ tier, city, solBalance, solPrice }) => {
   if (!tier) return null;
   const imgKey    = tier.imageKey?.[city] ?? 'ny_level1';
   const totalUSD  = solBalance * solPrice;
-  const starInfo  = valueCalculator.calculateStarProgress(solBalance, tier);
   const percentile = valueCalculator.getPercentile(solBalance);
 
   return (
@@ -146,7 +145,7 @@ const CurrentCard = ({ tier, city, solBalance, solPrice }) => {
         >
           <Text style={cc.title} numberOfLines={2}>{tier.names[city]}</Text>
         </LinearGradient>
-        <Text style={cc.loc}>📍 {tier.locations[city]}</Text>
+        <Text style={cc.loc}>{tier.locations[city]}</Text>
 
         <View style={cc.statsRow}>
           <View style={cc.stat}>
@@ -169,7 +168,6 @@ const CurrentCard = ({ tier, city, solBalance, solPrice }) => {
           </View>
         </View>
 
-        <Text style={cc.stars}>{starInfo?.starsDisplay ?? '★☆☆'}</Text>
         <Text style={cc.narrative}>{tier.narratives[city]}</Text>
       </View>
     </View>
@@ -221,7 +219,6 @@ const cc = StyleSheet.create({
   statLabel: { fontSize: 9, color: P.gray, letterSpacing: 2, marginBottom: 4 },
   statVal:   { fontSize: 17, fontWeight: '700', color: P.offWhite },
   statDiv:   { width: 1, backgroundColor: P.border },
-  stars:    { fontSize: 20, textAlign: 'center', marginBottom: 10, color: P.gold },
   narrative: { fontSize: 13, color: P.gray, lineHeight: 20, textAlign: 'center', fontStyle: 'italic' },
 });
 
@@ -277,6 +274,12 @@ const pg = StyleSheet.create({
 });
 
 // ── Future Target Card (Next +1 and +2) ──────────────────────────────────────
+const fmtUSD = (n) => {
+  if (n >= 1_000_000) return `$${(n / 1_000_000).toFixed(1)}M+`;
+  if (n >= 1_000)     return `$${(n / 1_000).toFixed(0)}K+`;
+  return `$${n}+`;
+};
+
 const FutureCard = ({ tier, city, mystery = false }) => {
   if (!tier) return null;
   const imgKey = tier.imageKey?.[city] ?? 'ny_level1';
@@ -301,13 +304,13 @@ const FutureCard = ({ tier, city, mystery = false }) => {
           {mystery ? '???  ' + tier.names[city].split(' ').slice(-2).join(' ') : tier.names[city]}
         </Text>
         <Text style={fc.loc}>
-          {mystery ? '📍 Unlocks at ' + tier.krwLabel : '📍 ' + tier.locations[city]}
+          {mystery ? 'Unlocks at ' + fmtUSD(tier.minUSD) : tier.locations[city]}
         </Text>
         {!mystery && (
           <View style={fc.reqRow}>
             <Text style={fc.req}>{tier.minSOL.toLocaleString()} SOL</Text>
             <Text style={fc.reqSep}> · </Text>
-            <Text style={fc.req}>{tier.krwLabel}</Text>
+            <Text style={fc.req}>{fmtUSD(tier.minUSD)}</Text>
           </View>
         )}
       </LinearGradient>
