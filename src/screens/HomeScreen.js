@@ -308,7 +308,7 @@ export default function HomeScreen() {
             start={{ x: 0, y: 0 }} end={{ x: 1, y: 0 }}
             style={s.logoGrad}
           >
-            <Text style={s.logoText}>SOL-LIONAIRE</Text>
+            <Text style={s.logoText}>SOL LIONAIRE</Text>
           </LinearGradient>
           <Text style={s.logoSub}>Luxury Status Layer · Solana</Text>
         </LinearGradient>
@@ -341,7 +341,7 @@ export default function HomeScreen() {
           {/* Percentile badge */}
           {mappingResult?.percentile && (
             <View style={s.percentileBadge}>
-              <Text style={s.percentileText}>🏆 {mappingResult.percentile} of SOL Holders</Text>
+              <Text style={s.percentileText}>{mappingResult.percentile} of SOL Holders</Text>
             </View>
           )}
         </View>
@@ -401,7 +401,7 @@ export default function HomeScreen() {
                 start={{ x: 0, y: 0 }} end={{ x: 1, y: 0 }}
                 style={s.shareBtnGrad}
               >
-                <Text style={s.shareBtnText}>📤  Share My Status</Text>
+                <Text style={s.shareBtnText}>Share My Status</Text>
               </LinearGradient>
             </TouchableOpacity>
 
@@ -426,7 +426,7 @@ export default function HomeScreen() {
                 style={s.shareBtnGrad}
               >
                 <Text style={s.shareBtnText}>
-                  {isLoading ? '⏳  Connecting…' : '🔗  Connect Wallet'}
+                  {isLoading ? 'Connecting…' : 'Connect Wallet'}
                 </Text>
               </LinearGradient>
             </TouchableOpacity>
@@ -456,7 +456,7 @@ export default function HomeScreen() {
 
           {/* Header row: logo + level pill */}
           <View style={sc.header}>
-            <Text style={sc.logo}>SOL-LIONAIRE</Text>
+            <Text style={sc.logo}>SOL LIONAIRE</Text>
             <View style={[sc.levelPill, { borderColor: tier?.color ?? P.gold }]}>
               <Text style={[sc.levelPillText, { color: tier?.color ?? P.gold }]}>
                 LEVEL {levelNum}
@@ -482,7 +482,7 @@ export default function HomeScreen() {
             <Text style={sc.propName} numberOfLines={2}>
               {mappingResult?.propertyName ?? '—'}
             </Text>
-            <Text style={sc.location}>📍 {mappingResult?.location ?? ''}</Text>
+            <Text style={sc.location}>{mappingResult?.location ?? ''}</Text>
 
             <LinearGradient
               colors={[P.goldDeep, P.gold, P.goldLight, P.gold, P.goldDeep]}
@@ -492,7 +492,7 @@ export default function HomeScreen() {
 
             {mappingResult?.percentile ? (
               <View style={sc.percentilePill}>
-                <Text style={sc.percentileText}>🏆 {mappingResult.percentile} of SOL Holders</Text>
+                <Text style={sc.percentileText}>{mappingResult.percentile} of SOL Holders</Text>
               </View>
             ) : null}
           </View>

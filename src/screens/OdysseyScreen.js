@@ -230,7 +230,7 @@ const ProgressSection = ({ upgrade, city }) => {
   if (!upgrade?.nextTier) {
     return (
       <View style={pg.wrap}>
-        <Text style={pg.maxText}>👑 Maximum Level Reached</Text>
+        <Text style={pg.maxText}>Maximum Level Reached</Text>
       </View>
     );
   }
@@ -256,7 +256,7 @@ const ProgressSection = ({ upgrade, city }) => {
           start={{ x: 0, y: 0 }} end={{ x: 1, y: 0 }}
           style={pg.jupGrad}
         >
-          <Text style={pg.jupText}>⚡ Upgrade via Jupiter</Text>
+          <Text style={pg.jupText}>Upgrade via Jupiter</Text>
         </LinearGradient>
       </TouchableOpacity>
     </View>
@@ -295,7 +295,7 @@ const FutureCard = ({ tier, city, mystery = false }) => {
         style={fc.overlay}
       >
         <Text style={fc.eyebrow}>
-          {mystery ? '🔒 FUTURE TARGET' : '🔮 NEXT LEVEL'}
+          {mystery ? 'FUTURE TARGET' : 'NEXT LEVEL'}
         </Text>
         <Text style={[fc.name, mystery && { color: P.gray }]}>
           {mystery ? '???  ' + tier.names[city].split(' ').slice(-2).join(' ') : tier.names[city]}
@@ -340,7 +340,7 @@ const fc = StyleSheet.create({
 const EmptyState = () => (
   <LinearGradient colors={[P.black, P.charcoal]} style={{ flex: 1 }}>
     <View style={{ flex: 1, alignItems: 'center', justifyContent: 'center', padding: 48 }}>
-      <Text style={{ fontSize: 56, marginBottom: 20 }}>🏛️</Text>
+      <Text style={{ fontSize: 48, fontWeight: '100', color: P.gold, letterSpacing: 8, marginBottom: 20 }}>◆</Text>
       <Text style={{ fontSize: 28, fontWeight: '300', color: P.offWhite, letterSpacing: 2, marginBottom: 12 }}>
         Empire
       </Text>

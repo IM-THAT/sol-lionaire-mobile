@@ -2,7 +2,8 @@ import 'react-native-get-random-values';
 import React from 'react';
 import { NavigationContainer } from '@react-navigation/native';
 import { createBottomTabNavigator } from '@react-navigation/bottom-tabs';
-import { Text, StyleSheet } from 'react-native';
+import { StyleSheet } from 'react-native';
+import { Ionicons } from '@expo/vector-icons';
 import { SafeAreaProvider } from 'react-native-safe-area-context';
 
 import HomeScreen from './src/screens/HomeScreen';
@@ -13,9 +14,6 @@ import { WalletProvider } from './src/context/WalletContext';
 
 const Tab = createBottomTabNavigator();
 
-const TabIcon = ({ emoji, focused }) => (
-  <Text style={[styles.icon, focused && styles.iconFocused]}>{emoji}</Text>
-);
 
 export default function App() {
   return (
@@ -27,7 +25,7 @@ export default function App() {
               headerShown: false,
               tabBarStyle: styles.tabBar,
               tabBarActiveTintColor: '#C9A84C',
-              tabBarInactiveTintColor: '#888888',
+              tabBarInactiveTintColor: '#555555',
               tabBarLabelStyle: styles.tabLabel,
             }}
           >
@@ -36,7 +34,9 @@ export default function App() {
               component={HomeScreen}
               options={{
                 tabBarLabel: 'Home',
-                tabBarIcon: ({ focused }) => <TabIcon emoji="🏠" focused={focused} />,
+                tabBarIcon: ({ color, focused }) => (
+                  <Ionicons name={focused ? 'home' : 'home-outline'} size={22} color={color} />
+                ),
               }}
             />
             <Tab.Screen
@@ -44,7 +44,9 @@ export default function App() {
               component={OdysseyScreen}
               options={{
                 tabBarLabel: 'Empire',
-                tabBarIcon: ({ focused }) => <TabIcon emoji="🏛️" focused={focused} />,
+                tabBarIcon: ({ color, focused }) => (
+                  <Ionicons name={focused ? 'business' : 'business-outline'} size={22} color={color} />
+                ),
               }}
             />
             <Tab.Screen
@@ -52,7 +54,9 @@ export default function App() {
               component={MoreScreen}
               options={{
                 tabBarLabel: 'More',
-                tabBarIcon: ({ focused }) => <TabIcon emoji="⚙️" focused={focused} />,
+                tabBarIcon: ({ color, focused }) => (
+                  <Ionicons name={focused ? 'ellipsis-horizontal' : 'ellipsis-horizontal-outline'} size={22} color={color} />
+                ),
               }}
             />
           </Tab.Navigator>
@@ -75,12 +79,5 @@ const styles = StyleSheet.create({
     fontSize: 11,
     fontWeight: '600',
     marginTop: 2,
-  },
-  icon: {
-    fontSize: 22,
-    opacity: 0.4,
-  },
-  iconFocused: {
-    opacity: 1,
   },
 });

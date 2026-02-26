@@ -35,7 +35,7 @@ export default function HeroSection() {
               end={{ x: 1, y: 0 }}
               style={s.titleGradient}
             >
-              <Text style={s.title}>SOL-LIONAIRE</Text>
+              <Text style={s.title}>SOL LIONAIRE</Text>
             </LinearGradient>
 
             <Text style={s.slogan}>
