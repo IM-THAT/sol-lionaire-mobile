@@ -1,4 +1,4 @@
-import React, { useEffect, useRef } from 'react';
+import React, { useEffect, useRef, useState } from 'react';
 import { View, Text, StyleSheet, Animated } from 'react-native';
 
 const P = {
@@ -10,53 +10,45 @@ const P = {
 
 export const CalculatingAnimation = ({ visible }) => {
   const fadeAnim = useRef(new Animated.Value(0)).current;
-  const ripple1 = useRef(new Animated.Value(0)).current;
-  const ripple2 = useRef(new Animated.Value(0)).current;
-  const ripple3 = useRef(new Animated.Value(0)).current;
+  const ripple1  = useRef(new Animated.Value(0)).current;
+  const ripple2  = useRef(new Animated.Value(0)).current;
+  const ripple3  = useRef(new Animated.Value(0)).current;
+  // Keep component mounted until fade-out finishes, so the animation actually plays
+  const [shouldRender, setShouldRender] = useState(visible);
 
   useEffect(() => {
     if (visible) {
+      setShouldRender(true);
+
       // Fade in
       Animated.timing(fadeAnim, {
-        toValue: 1,
-        duration: 300,
-        useNativeDriver: true,
+        toValue: 1, duration: 300, useNativeDriver: true,
       }).start();
 
       // Ripple animation
-      const createRipple = (anim, delay) => {
-        return Animated.loop(
+      const createRipple = (anim, delay) =>
+        Animated.loop(
           Animated.sequence([
             Animated.delay(delay),
-            Animated.parallel([
-              Animated.timing(anim, {
-                toValue: 1,
-                duration: 2000,
-                useNativeDriver: true,
-              }),
-            ]),
-            Animated.timing(anim, {
-              toValue: 0,
-              duration: 0,
-              useNativeDriver: true,
-            }),
+            Animated.timing(anim, { toValue: 1, duration: 2000, useNativeDriver: true }),
+            Animated.timing(anim, { toValue: 0, duration: 0,    useNativeDriver: true }),
           ])
         );
-      };
 
       createRipple(ripple1, 0).start();
       createRipple(ripple2, 666).start();
       createRipple(ripple3, 1333).start();
     } else {
+      // Fade out, THEN unmount
       Animated.timing(fadeAnim, {
-        toValue: 0,
-        duration: 200,
-        useNativeDriver: true,
-      }).start();
+        toValue: 0, duration: 200, useNativeDriver: true,
+      }).start(({ finished }) => {
+        if (finished) setShouldRender(false);
+      });
     }
   }, [visible]);
 
-  if (!visible) return null;
+  if (!shouldRender) return null;
 
   const createRippleStyle = (anim) => ({
     opacity: anim.interpolate({

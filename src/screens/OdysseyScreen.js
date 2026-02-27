@@ -12,7 +12,7 @@
 import React, { useState, useEffect, useRef } from 'react';
 import {
   View, Text, ScrollView, StyleSheet,
-  TouchableOpacity, Image, Dimensions, Linking, ActivityIndicator,
+  TouchableOpacity, Image, Linking, ActivityIndicator,
 } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { LinearGradient } from 'expo-linear-gradient';
@@ -20,8 +20,6 @@ import { useWallet } from '../context/WalletContext';
 import { valueCalculator, PROPERTY_TIERS, CityType } from '../services/valueCalculator';
 import { priceDataService } from '../services/pythPriceService';
 import { buildClaimTransaction, getExplorerUrl, DEV_MODE } from '../services/claimService';
-
-const { width: W, height: H } = Dimensions.get('window');
 
 // ── Jupiter deep link: open app if installed, fall back to web ────────────────
 const JUP_WEB_URL = 'https://jup.ag/swap/USDC-SOL';
@@ -439,7 +437,12 @@ const ClaimSection = ({ tier, city, walletAddress, signAndSendTransaction }) => 
       </TouchableOpacity>
       <Text style={cl.hint}>~0.000005 SOL network fee</Text>
       {status === 'error' && (
-        <Text style={cl.errText}>Transaction failed — please try again</Text>
+        <>
+          <Text style={cl.errText}>Transaction failed. Please try again.</Text>
+          <TouchableOpacity style={cl.retryBtn} onPress={handleClaim}>
+            <Text style={cl.retryText}>↩ Try Again</Text>
+          </TouchableOpacity>
+        </>
       )}
     </View>
   );
@@ -462,8 +465,11 @@ const cl = StyleSheet.create({
   btn:  { borderRadius: 12, overflow: 'hidden' },
   btnGrad: { paddingVertical: 14, alignItems: 'center' },
   btnText: { fontSize: 15, fontWeight: '800', color: P.black, letterSpacing: 0.5 },
-  hint:    { fontSize: 11, color: P.border, textAlign: 'center', marginTop: 10 },
-  errText: { fontSize: 12, color: '#FF6B6B', textAlign: 'center', marginTop: 8 },
+  hint:     { fontSize: 11, color: P.border, textAlign: 'center', marginTop: 10 },
+  errText:  { fontSize: 12, color: '#FF6B6B', textAlign: 'center', marginTop: 8 },
+  retryBtn: { alignSelf: 'center', marginTop: 10, paddingVertical: 8, paddingHorizontal: 20,
+              borderWidth: 1, borderColor: '#FF6B6B', borderRadius: 8 },
+  retryText:{ fontSize: 13, color: '#FF6B6B', fontWeight: '600' },
   // success state
   wrapSuccess:  { borderColor: P.gold },
   successIcon:  { alignItems: 'center', marginBottom: 10, marginTop: 4 },
@@ -501,6 +507,15 @@ export default function OdysseyScreen() {
   const [isLoading,   setIsLoading]   = useState(false);
 
   const scrollRef = useRef(null);
+
+  // Clear stale state immediately on disconnect so reconnect doesn't flash old data
+  useEffect(() => {
+    if (!isConnected) {
+      setCurrentTier(null);
+      setUpgrade(null);
+      setSolPrice(0);
+    }
+  }, [isConnected]);
 
   useEffect(() => {
     if (isConnected) loadData();
