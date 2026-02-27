@@ -8,13 +8,14 @@
  *  - Real-time SOL balance + KRW equivalent
  *  - "Share My Status" CTA
  */
-import React, { useState, useEffect, useRef } from 'react';
+import React, { useState, useEffect, useRef, useCallback } from 'react';
 import {
   View, Text, ScrollView, StyleSheet,
   TouchableOpacity, StatusBar, Animated, Modal, Image,
   Dimensions,
 } from 'react-native';
 import { LinearGradient } from 'expo-linear-gradient';
+import Svg, { Polyline } from 'react-native-svg';
 import { captureRef } from 'react-native-view-shot';
 import * as Sharing from 'expo-sharing';
 import { Share } from 'react-native';
@@ -69,17 +70,17 @@ const CITIES = [
   { key: CityType.DUBAI,     label: '🏙️ Dubai' },
 ];
 
-// ── Pulsing gold border glow — "show off your status" ────────────────────────
-// A #FFD700 inner border breathes in/out every 3s, suggesting the button
-// is alive and worth tapping ("this is worth sharing").
-const GlowBorderOverlay = () => {
-  const glow = useRef(new Animated.Value(0)).current;
+// ── Gold bar surface sweep — "this button is a gold bar, tap it" ──────────────
+// Wide triple-highlight sweeps horizontally every ~4s to simulate
+// the reflective sheen of a physical gold bullion surface.
+const GoldBarSweep = () => {
+  const x = useRef(new Animated.Value(-130)).current;
   useEffect(() => {
     const anim = Animated.loop(
       Animated.sequence([
-        Animated.timing(glow, { toValue: 1, duration: 1400, useNativeDriver: true }),
-        Animated.timing(glow, { toValue: 0, duration: 1400, useNativeDriver: true }),
-        Animated.delay(1200),
+        Animated.delay(3000),
+        Animated.timing(x, { toValue: 460, duration: 1000, useNativeDriver: true }),
+        Animated.timing(x, { toValue: -130, duration: 0,   useNativeDriver: true }),
       ])
     );
     anim.start();
@@ -88,15 +89,41 @@ const GlowBorderOverlay = () => {
   return (
     <Animated.View
       pointerEvents="none"
-      style={{
-        position: 'absolute',
-        top: 0, left: 0, right: 0, bottom: 0,
-        borderRadius: 14,
-        borderWidth: 2,
-        borderColor: '#FFD700',
-        opacity: glow,
-      }}
-    />
+      style={{ position: 'absolute', top: 0, bottom: 0, width: 110, transform: [{ translateX: x }] }}
+    >
+      <LinearGradient
+        colors={['transparent', 'rgba(255,215,0,0.22)', 'rgba(255,248,195,0.55)', 'rgba(255,215,0,0.22)', 'transparent']}
+        start={{ x: 0, y: 0 }} end={{ x: 1, y: 0 }}
+        style={{ flex: 1 }}
+      />
+    </Animated.View>
+  );
+};
+
+// ── 24h price sparkline (react-native-svg) ────────────────────────────────────
+// Takes an array of ~12 sampled hourly SOL prices and draws a minimal line chart.
+const PriceSpark = ({ prices, positive }) => {
+  if (!prices || prices.length < 2) return null;
+  const W = 72, H = 26;
+  const min   = Math.min(...prices);
+  const max   = Math.max(...prices);
+  const range = max - min || 1;
+  const pts   = prices.map((p, i) => {
+    const px = ((i / (prices.length - 1)) * W).toFixed(1);
+    const py = (H - ((p - min) / range) * (H - 4) - 2).toFixed(1);
+    return `${px},${py}`;
+  }).join(' ');
+  return (
+    <Svg width={W} height={H}>
+      <Polyline
+        points={pts}
+        fill="none"
+        stroke={positive ? '#4DB36A' : '#E05555'}
+        strokeWidth="1.5"
+        strokeLinejoin="round"
+        strokeLinecap="round"
+      />
+    </Svg>
   );
 };
 
@@ -138,9 +165,16 @@ const WalletPickerModal = ({ visible, onSelect, onClose }) => {
 };
 
 // ── Floating Badge ────────────────────────────────────────────────────────────
-const FloatingBadge = ({ imageKey, tierColor, level }) => {
+// nextImageKey: faint silhouette of the next level shown behind the current frame
+// level: scales glow intensity (1 = subtle, 10 = blazing)
+const FloatingBadge = ({ imageKey, nextImageKey, tierColor, level }) => {
   const floatAnim = useRef(new Animated.Value(0)).current;
   const glowAnim  = useRef(new Animated.Value(0.6)).current;
+
+  // Glow scales with level: opacity max 0.55 (lv1) → 1.0 (lv10)
+  //                          shadowRadius    16   →  44
+  const glowMax    = Math.min(0.5 + (level || 1) * 0.05, 1.0);
+  const glowRadius = Math.min(16 + (level || 1) * 3, 46);
 
   useEffect(() => {
     Animated.loop(
@@ -152,18 +186,31 @@ const FloatingBadge = ({ imageKey, tierColor, level }) => {
 
     Animated.loop(
       Animated.sequence([
-        Animated.timing(glowAnim, { toValue: 1,   duration: 1800, useNativeDriver: true }),
-        Animated.timing(glowAnim, { toValue: 0.5, duration: 1800, useNativeDriver: true }),
+        Animated.timing(glowAnim, { toValue: glowMax,       duration: 1800, useNativeDriver: true }),
+        Animated.timing(glowAnim, { toValue: glowMax * 0.5, duration: 1800, useNativeDriver: true }),
       ])
     ).start();
   }, []);
 
-  const imageSource = imageKey ? PROPERTY_IMAGES[imageKey] : PROPERTY_IMAGES['ny_level1'];
+  const imageSource     = PROPERTY_IMAGES[imageKey] ?? PROPERTY_IMAGES['ny_level1'];
+  const nextImageSource = nextImageKey ? PROPERTY_IMAGES[nextImageKey] : null;
 
   return (
     <Animated.View style={[s.badgeWrap, { transform: [{ translateY: floatAnim }] }]}>
-      {/* Outer glow */}
-      <Animated.View style={[s.badgeGlow, { opacity: glowAnim, borderColor: tierColor || P.gold }]} />
+      {/* Outer glow — intensity and radius scale with tier level */}
+      <Animated.View style={[
+        s.badgeGlow,
+        { opacity: glowAnim, borderColor: tierColor || P.gold, shadowRadius: glowRadius },
+      ]} />
+      {/* Next-level silhouette — faint ghost of the next property */}
+      {nextImageSource && (
+        <Image
+          source={nextImageSource}
+          style={s.nextSilhouette}
+          resizeMode="cover"
+          blurRadius={6}
+        />
+      )}
       {/* Gold pixel border frame */}
       <LinearGradient
         colors={[P.goldDeep, P.gold, P.goldLight, P.gold, P.goldDeep]}
@@ -225,11 +272,16 @@ export default function HomeScreen() {
     walletName, connectWallet, disconnectWallet,
   } = useWallet();
 
-  const [selectedCity,  setSelectedCity]  = useState(CityType.MANHATTAN);
-  const [solPrice,      setSolPrice]      = useState(0);
-  const [mappingResult, setMappingResult] = useState(null);
-  const [isCalculating, setIsCalculating] = useState(false);
-  const [showPicker,    setShowPicker]    = useState(false);
+  const [selectedCity,   setSelectedCity]   = useState(CityType.MANHATTAN);
+  const [solPrice,       setSolPrice]       = useState(0);
+  const [priceChange24h, setPriceChange24h] = useState(null);
+  const [solSparkline,   setSolSparkline]   = useState([]);
+  const [mappingResult,  setMappingResult]  = useState(null);
+  const [isCalculating,  setIsCalculating]  = useState(false);
+  const [showPicker,     setShowPicker]     = useState(false);
+
+  // City transition fade — fades hero+balance out then back in on city switch
+  const cityFade = useRef(new Animated.Value(1)).current;
 
 
   // Clear result immediately when wallet disconnects (also handles async race)
@@ -252,6 +304,8 @@ export default function HomeScreen() {
     try {
       const prices = await priceDataService.fetchAllPrices(selectedCity);
       setSolPrice(prices.solPrice || 0);
+      setPriceChange24h(prices.priceChange24h ?? null);
+      setSolSparkline(prices.solSparkline || []);
     } catch (e) {
       console.error('Price load failed:', e);
     }
@@ -269,6 +323,8 @@ export default function HomeScreen() {
       // Single fetch — result reused for both state update and calculation
       const prices = await priceDataService.fetchAllPrices(selectedCity);
       setSolPrice(prices.solPrice || 0);
+      setPriceChange24h(prices.priceChange24h ?? null);
+      setSolSparkline(prices.solSparkline || []);
       const result = valueCalculator.determineMapping({
         solAmount: balance || 0,
         solPrice:  prices.solPrice || 0,
@@ -283,6 +339,15 @@ export default function HomeScreen() {
       setIsCalculating(false);
     }
   };
+
+  // City switch: fade hero+balance out → switch city → fade back in
+  const handleCityChange = useCallback((cityKey) => {
+    if (cityKey === selectedCity) return;
+    Animated.timing(cityFade, { toValue: 0, duration: 150, useNativeDriver: true }).start(() => {
+      setSelectedCity(cityKey);
+      Animated.timing(cityFade, { toValue: 1, duration: 280, useNativeDriver: true }).start();
+    });
+  }, [selectedCity, cityFade]);
 
   const saveToHistory = async (result) => {
     try {
@@ -332,9 +397,11 @@ export default function HomeScreen() {
   const solBalance = balance || 0;
   const totalUSD   = solBalance * solPrice;
 
-  const tier      = (isConnected && mappingResult) ? mappingResult.tier : null;
-  const imageKey  = tier?.imageKey?.[selectedCity] ?? 'ny_level1';
-  const levelNum  = tier?.level ?? null;
+  const tier          = (isConnected && mappingResult) ? mappingResult.tier : null;
+  const imageKey      = tier?.imageKey?.[selectedCity] ?? 'ny_level1';
+  const levelNum      = tier?.level ?? null;
+  const nextTier      = mappingResult?.upgrade?.nextTier ?? null;
+  const nextImageKey  = nextTier?.imageKey?.[selectedCity] ?? null;
   // titleText only ever rendered inside {isConnected && mappingResult && ...}
   const titleText = `Level ${levelNum}: ${mappingResult?.propertyName ?? ''}`;
 
@@ -362,44 +429,48 @@ export default function HomeScreen() {
           <Text style={s.logoSub}>Luxury Status Layer · Solana</Text>
         </LinearGradient>
 
-        {/* ─── Hero Badge ───────────────────────────────────────────────────── */}
-        <View style={s.heroArea}>
-          {isConnected && mappingResult ? (
-            <FloatingBadge
-              imageKey={imageKey}
-              tierColor={tier?.color}
-              level={levelNum}
-            />
-          ) : (
-            <DefaultBadge />
-          )}
+        {/* ─── Hero Badge + Balance — wrapped for city-switch fade ──────────── */}
+        <Animated.View style={{ opacity: cityFade }}>
 
-          {/* Identity Label — only shown when connected and result available */}
-          {isConnected && mappingResult && (
+          {/* Hero Badge */}
+          <View style={s.heroArea}>
+            {isConnected && mappingResult ? (
+              <FloatingBadge
+                imageKey={imageKey}
+                nextImageKey={nextImageKey}
+                tierColor={tier?.color}
+                level={levelNum}
+              />
+            ) : (
+              <DefaultBadge />
+            )}
+
+            {/* Identity Label — only shown when connected and result available */}
+            {isConnected && mappingResult && (
+              <LinearGradient
+                colors={[P.goldDeep, P.gold, P.goldLight, P.gold, P.goldDeep]}
+                start={{ x: 0, y: 0 }} end={{ x: 1, y: 0 }}
+                style={s.identityGrad}
+              >
+                <Text style={s.identityText} numberOfLines={2}>{titleText}</Text>
+              </LinearGradient>
+            )}
+
+            {/* Percentile badge — hide for Newcomer */}
+            {isConnected && mappingResult?.percentile && mappingResult.percentile !== 'Newcomer' && (
+              <View style={s.percentileBadge}>
+                <Text style={s.percentileText}>{mappingResult.percentile} of SOL Holders</Text>
+              </View>
+            )}
+          </View>
+
+          {/* Balance Display (only when connected) */}
+          {isConnected && <View style={s.balanceCard}>
             <LinearGradient
-              colors={[P.goldDeep, P.gold, P.goldLight, P.gold, P.goldDeep]}
-              start={{ x: 0, y: 0 }} end={{ x: 1, y: 0 }}
-              style={s.identityGrad}
+              colors={['rgba(201,168,76,0.08)', 'rgba(0,0,0,0)']}
+              style={s.balanceGradient}
             >
-              <Text style={s.identityText} numberOfLines={2}>{titleText}</Text>
-            </LinearGradient>
-          )}
-
-          {/* Percentile badge — hide for Newcomer (text doesn't read well) */}
-          {isConnected && mappingResult?.percentile && mappingResult.percentile !== 'Newcomer' && (
-            <View style={s.percentileBadge}>
-              <Text style={s.percentileText}>{mappingResult.percentile} of SOL Holders</Text>
-            </View>
-          )}
-        </View>
-
-        {/* ─── Balance Display (only when connected) ────────────────────────── */}
-        {isConnected && <View style={s.balanceCard}>
-          <LinearGradient
-            colors={['rgba(201,168,76,0.08)', 'rgba(0,0,0,0)']}
-            style={s.balanceGradient}
-          >
-            <Text style={s.balanceSOL}>
+              <Text style={s.balanceSOL}>
                 {solBalance.toFixed(4)} <Text style={s.balanceSOLUnit}>SOL</Text>
               </Text>
               <Text style={s.balanceUSD}>
@@ -407,14 +478,28 @@ export default function HomeScreen() {
                   ? `≈ $${totalUSD.toLocaleString(undefined, { maximumFractionDigits: 0 })}`
                   : '≈ ---'}
               </Text>
+              {/* Wealth Pulse — 24h change % + sparkline */}
+              {priceChange24h !== null && (
+                <View style={s.wealthPulse}>
+                  <Text style={[
+                    s.wealthChange,
+                    { color: priceChange24h >= 0 ? '#4DB36A' : '#E05555' },
+                  ]}>
+                    {priceChange24h >= 0 ? '▲' : '▼'} {Math.abs(priceChange24h).toFixed(2)}% (24h)
+                  </Text>
+                  <PriceSpark prices={solSparkline} positive={priceChange24h >= 0} />
+                </View>
+              )}
               {/* Wallet tag */}
               <View style={s.walletTag}>
                 <Text style={s.walletTagText}>
                   {walletAddress?.slice(0, 4)}…{walletAddress?.slice(-4)}
                 </Text>
               </View>
-          </LinearGradient>
-        </View>}
+            </LinearGradient>
+          </View>}
+
+        </Animated.View>
 
         {/* ─── City Toggle (only when connected) ───────────────────────────── */}
         {isConnected && <View style={s.cityToggleRow}>
@@ -422,7 +507,7 @@ export default function HomeScreen() {
             <TouchableOpacity
               key={c.key}
               style={[s.cityBtn, selectedCity === c.key && s.cityBtnActive]}
-              onPress={() => setSelectedCity(c.key)}
+              onPress={() => handleCityChange(c.key)}
             >
               <Text style={[s.cityBtnText, selectedCity === c.key && s.cityBtnTextActive]}>
                 {c.label}
@@ -447,7 +532,7 @@ export default function HomeScreen() {
                 >
                   <Text style={s.shareBtnText}>Share My Status</Text>
                 </LinearGradient>
-                <GlowBorderOverlay />
+                <GoldBarSweep />
               </TouchableOpacity>
             </View>
 
@@ -578,6 +663,14 @@ const s = StyleSheet.create({
 
   // Floating badge
   badgeWrap: { alignItems: 'center', marginBottom: 20 },
+  // Ghost silhouette of the next-level property behind the badge
+  nextSilhouette: {
+    position: 'absolute',
+    width: BADGE_SIZE + 28,
+    height: BADGE_SIZE + 28,
+    borderRadius: 16,
+    opacity: 0.18,
+  },
   badgeGlow: {
     position: 'absolute',
     width: BADGE_SIZE + 32,
@@ -682,6 +775,16 @@ const s = StyleSheet.create({
   balanceSOLUnit: { fontSize: 28, fontWeight: '400', color: P.goldLight },
   balanceUSD: { fontSize: 14, color: P.gray, marginTop: 4 },
   balanceEmpty: { fontSize: 52, fontWeight: '900', color: P.border, letterSpacing: -1 },
+
+  // Wealth Pulse row — 24h change + sparkline
+  wealthPulse: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    gap: 10,
+    marginTop: 8,
+  },
+  wealthChange: { fontSize: 12, fontWeight: '600', letterSpacing: 0.3 },
 
   walletTag: {
     marginTop: 14,
