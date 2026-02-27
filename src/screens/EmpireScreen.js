@@ -12,7 +12,7 @@
 import React, { useState, useEffect, useRef } from 'react';
 import {
   View, Text, ScrollView, StyleSheet,
-  TouchableOpacity, Image, Linking, ActivityIndicator,
+  TouchableOpacity, Image, Linking, ActivityIndicator, Animated,
 } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { LinearGradient } from 'expo-linear-gradient';
@@ -233,6 +233,34 @@ const cc = StyleSheet.create({
   narrative: { fontSize: 13, color: P.gray, lineHeight: 20, textAlign: 'center', fontStyle: 'italic' },
 });
 
+// ── Shimmer sweep overlay for gold gradient buttons ───────────────────────────
+const ShimmerOverlay = () => {
+  const x = useRef(new Animated.Value(-100)).current;
+  useEffect(() => {
+    const anim = Animated.loop(
+      Animated.sequence([
+        Animated.delay(2800),
+        Animated.timing(x, { toValue: 420, duration: 650, useNativeDriver: true }),
+        Animated.timing(x, { toValue: -100, duration: 0,   useNativeDriver: true }),
+      ])
+    );
+    anim.start();
+    return () => anim.stop();
+  }, []);
+  return (
+    <Animated.View
+      pointerEvents="none"
+      style={{ position: 'absolute', top: 0, bottom: 0, width: 80, transform: [{ translateX: x }] }}
+    >
+      <LinearGradient
+        colors={['transparent', 'rgba(255,255,255,0.38)', 'transparent']}
+        start={{ x: 0, y: 0 }} end={{ x: 1, y: 0 }}
+        style={{ flex: 1 }}
+      />
+    </Animated.View>
+  );
+};
+
 // ── Progress Bar Section ──────────────────────────────────────────────────────
 const ProgressSection = ({ upgrade, city }) => {
   // Still loading — show nothing rather than "Maximum Level Reached" incorrectly
@@ -269,6 +297,7 @@ const ProgressSection = ({ upgrade, city }) => {
         >
           <Text style={pg.jupText}>Upgrade via Jupiter</Text>
         </LinearGradient>
+        <ShimmerOverlay />
       </TouchableOpacity>
     </View>
   );

@@ -69,6 +69,34 @@ const CITIES = [
   { key: CityType.DUBAI,     label: '🏙️ Dubai' },
 ];
 
+// ── Shimmer sweep overlay — drop inside any overflow:hidden button ────────────
+const ShimmerOverlay = () => {
+  const x = useRef(new Animated.Value(-100)).current;
+  useEffect(() => {
+    const anim = Animated.loop(
+      Animated.sequence([
+        Animated.delay(2800),
+        Animated.timing(x, { toValue: 420, duration: 650, useNativeDriver: true }),
+        Animated.timing(x, { toValue: -100, duration: 0,   useNativeDriver: true }),
+      ])
+    );
+    anim.start();
+    return () => anim.stop();
+  }, []);
+  return (
+    <Animated.View
+      pointerEvents="none"
+      style={{ position: 'absolute', top: 0, bottom: 0, width: 80, transform: [{ translateX: x }] }}
+    >
+      <LinearGradient
+        colors={['transparent', 'rgba(255,255,255,0.38)', 'transparent']}
+        start={{ x: 0, y: 0 }} end={{ x: 1, y: 0 }}
+        style={{ flex: 1 }}
+      />
+    </Animated.View>
+  );
+};
+
 // ── Wallet Picker Modal ───────────────────────────────────────────────────────
 const WalletPickerModal = ({ visible, onSelect, onClose }) => {
   const fadeAnim = useRef(new Animated.Value(0)).current;
@@ -416,6 +444,7 @@ export default function HomeScreen() {
                 >
                   <Text style={s.shareBtnText}>Share My Status</Text>
                 </LinearGradient>
+                <ShimmerOverlay />
               </TouchableOpacity>
             </View>
 
