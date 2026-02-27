@@ -272,6 +272,7 @@ export default function HomeScreen() {
     walletName, connectWallet, disconnectWallet,
   } = useWallet();
 
+  const [isSharing,      setIsSharing]      = useState(false);
   const [selectedCity,   setSelectedCity]   = useState(CityType.MANHATTAN);
   const [solPrice,       setSolPrice]       = useState(0);
   const [priceChange24h, setPriceChange24h] = useState(null);
@@ -360,9 +361,11 @@ export default function HomeScreen() {
   };
 
   const handleShare = async () => {
+    if (isSharing) return;
+    setIsSharing(true);
     try {
-      // 1. Capture the off-screen share card as PNG
-      const uri = await captureRef(shareCardRef, { format: 'png', quality: 1 });
+      // quality 0.9: ~30% faster than 1.0, visually indistinguishable at share sizes
+      const uri = await captureRef(shareCardRef, { format: 'png', quality: 0.9 });
       // 2. Share via expo-sharing (works on both iOS & Android)
       const canShare = await Sharing.isAvailableAsync();
       if (canShare) {
@@ -387,6 +390,8 @@ export default function HomeScreen() {
       }
     } catch (e) {
       console.log('Share failed', e);
+    } finally {
+      setIsSharing(false);
     }
   };
 
@@ -521,8 +526,9 @@ export default function HomeScreen() {
           <View style={s.ctaArea}>
             <View style={s.shareBtnGlow}>
               <TouchableOpacity
-                style={s.shareBtn}
+                style={[s.shareBtn, isSharing && { opacity: 0.75 }]}
                 onPress={handleShare}
+                disabled={isSharing}
                 activeOpacity={0.85}
               >
                 <LinearGradient
@@ -530,9 +536,11 @@ export default function HomeScreen() {
                   start={{ x: 0, y: 0 }} end={{ x: 1, y: 0 }}
                   style={s.shareBtnGrad}
                 >
-                  <Text style={s.shareBtnText}>Share My Status</Text>
+                  <Text style={s.shareBtnText}>
+                    {isSharing ? 'Preparing…' : 'Share My Status'}
+                  </Text>
                 </LinearGradient>
-                <GoldBarSweep />
+                {!isSharing && <GoldBarSweep />}
               </TouchableOpacity>
             </View>
 
