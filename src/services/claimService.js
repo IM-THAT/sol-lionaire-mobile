@@ -16,7 +16,7 @@ const MEMO_PROGRAM_ID = new PublicKey('MemoSq4gqABAXKb96qnH8TysNcWxMyWCqXgDLGmfc
  */
 export const buildClaimTransaction = ({ tier, city, walletAddress }) => {
   const memo = JSON.stringify({
-    app: 'sol-lionaire',
+    app: 'Solionaire',
     v: '1',
     level: tier.level,
     name: tier.names[city],

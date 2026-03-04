@@ -117,16 +117,16 @@ eas build -p android --profile preview
 
 | Level | Manhattan | Dubai | Min USD |
 |---|---|---|---|
-| 1 | Studio, Harlem | Shared Room, Deira | $0 |
-| 2 | 1BR, Lower East Side | Studio, JVC | $500 |
-| 3 | 1BR, Midtown | 1BR, JBR | $2,000 |
-| 4 | 2BR, Upper West Side | 2BR, Business Bay | $8,000 |
-| 5 | 2BR, Tribeca | 3BR, Dubai Marina | $25,000 |
-| 6 | 3BR, Chelsea | Townhouse, Palm Jumeirah | $75,000 |
-| 7 | Full Floor, Soho | Villa, Emirates Hills | $200,000 |
-| 8 | Penthouse, Central Park South | Sky Villa, Downtown Dubai | $500,000 |
-| 9 | Tower, Hudson Yards | Mega-Penthouse, Burj Area | $1,500,000 |
-| 10 | Empire Suite, One57 | Palace, Palm Jumeirah | $5,000,000 |
+| 1 | Times Square Mini Neon Slot | Desert Oasis Gold Plot | $0 |
+| 2 | Subway Ad Panel | Gold Souk Mini Stall | $500 |
+| 3 | Wall Street Gold Vault Box | Dubai Marina Private Parking Stall | $3,000 |
+| 4 | Hell's Kitchen Private Parking Spot | Dubai Marina Yacht Mooring Berth | $100,000 |
+| 5 | Brooklyn Heights Gold Rooftop Studio | JBR Beachfront Gold Studio | $300,000 |
+| 6 | Chelsea High-Rise Gold 1-Bed Condo | Palm Jumeirah Gold Sky 1-Bed | $750,000 |
+| 7 | SoHo Artist Gold 2-Bed Loft | Palm Arabian Gold Sea-view 2-Bed Suite | $1,500,000 |
+| 8 | Central Park South Gold Penthouse | Palm Frond Signature Gold Villa | $3,500,000 |
+| 9 | Billionaires' Row Gold Trophy Penthouse | Emirates Hills Gold-Leaf Manor | $15,000,000 |
+| 10 | Apex Empire Crown | Sovereign Burj Gold Sky Palace | $20,000,000 |
 
 ---
 
