@@ -17,8 +17,7 @@ import {
 import { LinearGradient } from 'expo-linear-gradient';
 import Svg, { Polyline } from 'react-native-svg';
 import { captureRef } from 'react-native-view-shot';
-import * as Sharing from 'expo-sharing';
-import { Share } from 'react-native';
+import RNShare from 'react-native-share';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { useWallet } from '../context/WalletContext';
 import { valueCalculator, CityType } from '../services/valueCalculator';
@@ -389,29 +388,26 @@ export default function HomeScreen() {
     if (isSharing) return;
     setIsSharing(true);
     try {
-      // quality 0.9: ~30% faster than 1.0, visually indistinguishable at share sizes
-      const uri = await captureRef(shareCardRef, { format: 'png', quality: 0.9 });
-      const canShare = await Sharing.isAvailableAsync();
-      if (canShare) {
-        await Sharing.shareAsync(uri, {
-          mimeType: 'image/png',
-          dialogTitle: 'Share My Status',
-          UTI: 'public.png',
-        });
-      } else {
-        // Fallback: text share
-        const usdVal = totalUSD.toLocaleString(undefined, { maximumFractionDigits: 0 });
-        const percentileStr = (mappingResult?.percentile && mappingResult.percentile !== 'Newcomer')
-          ? `🏆 ${mappingResult.percentile} of SOL Holders\n`
-          : '';
-        await Share.share({
-          message:
-            `🏛️ Sol-lionaire — Level ${levelNum}: ${mappingResult?.propertyName}\n` +
-            `💰 ${solBalance.toFixed(4)} SOL ≈ $${usdVal}\n` +
-            percentileStr +
-            `Claim your piece of the Skyline 👑`,
-        });
-      }
+      // Capture share card as base64 PNG
+      const uri = await captureRef(shareCardRef, { format: 'png', quality: 0.9, result: 'base64' });
+
+      const usdVal = totalUSD.toLocaleString(undefined, { maximumFractionDigits: 0 });
+      const percentileStr = (mappingResult?.percentile && mappingResult.percentile !== 'Newcomer')
+        ? `🏆 ${mappingResult.percentile} of SOL Holders\n`
+        : '';
+      const caption =
+        `🏛️ Level ${levelNum}: ${mappingResult?.propertyName ?? ''}\n` +
+        `💰 ${(solBalance ?? 0).toFixed(4)} SOL ≈ $${usdVal}\n` +
+        percentileStr +
+        `\n#Solionaire #Solana #SOL #LuxuryStatusLayer #Web3`;
+
+      await RNShare.open({
+        url: `data:image/png;base64,${uri}`,
+        type: 'image/png',
+        message: caption,
+        title: 'Share My Status',
+        failOnCancel: false,
+      });
     } catch (e) {
       console.log('Share failed', e);
     } finally {
