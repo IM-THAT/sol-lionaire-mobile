@@ -420,9 +420,11 @@ const fc = StyleSheet.create({
 });
 
 // ── Claim My Territory ────────────────────────────────────────────────────────
-const ClaimSection = ({ tier, city, walletAddress, signAndSendTransaction }) => {
-  const [status, setStatus] = useState('idle'); // idle | signing | confirming | success | error
-  const [txSig,  setTxSig]  = useState(null);
+// claimedResult: { txSig, ts } from parent (per-city), null if not yet claimed
+// onClaimed(sig, ts): called after successful claim — persists result in parent
+// onReset(): clears claim result for this city (enables re-claim)
+const ClaimSection = ({ tier, city, walletAddress, signAndSendTransaction, claimedResult, onClaimed, onReset }) => {
+  const [status, setStatus] = useState('idle'); // idle | signing | confirming | error
   const [copied, setCopied] = useState(false);
 
   // Gold burst overlay + button bounce on press
@@ -445,25 +447,28 @@ const ClaimSection = ({ tier, city, walletAddress, signAndSendTransaction }) => 
       const tx  = buildClaimTransaction({ tier, city, walletAddress });
       setStatus('confirming');
       const sig = await signAndSendTransaction(tx);
-      setTxSig(sig);
-      setStatus('success');
+      onClaimed(sig, Date.now()); // lift result to parent (persists per city)
+      setStatus('idle');
     } catch (e) {
       console.error('Claim failed:', e);
       setStatus('error');
     }
   };
 
-  if (status === 'success') {
-    const claimedAt = new Date().toLocaleString('en-US', {
+  // ── Success state — driven by parent's per-city claimedResult ──────────────
+  if (claimedResult) {
+    const { txSig, ts } = claimedResult;
+    const claimedAt = new Date(ts).toLocaleString('en-US', {
       month: 'short', day: 'numeric', year: 'numeric',
       hour: '2-digit', minute: '2-digit',
+      timeZoneName: 'short', // show KST / UTC etc.
     });
     const memoObj = {
       app: 'Solionaire',
       level: tier.level,
       name: tier.names[city],
       city: city.toLowerCase(),
-      ts: Math.floor(Date.now() / 1000),
+      ts: Math.floor(ts / 1000),
     };
     const handleCopy = () => {
       Clipboard.setString(JSON.stringify(memoObj, null, 2));
@@ -478,14 +483,13 @@ const ClaimSection = ({ tier, city, walletAddress, signAndSendTransaction }) => 
           start={{ x: 0, y: 0 }} end={{ x: 1, y: 0 }}
           style={cl.accentLine}
         />
-        {/* Checkmark icon */}
         <View style={cl.successIcon}>
           <Ionicons name="checkmark-circle" size={44} color={P.gold} />
         </View>
         <Text style={cl.successEye}>ON-CHAIN VERIFIED · {DEV_MODE ? 'DEVNET' : 'MAINNET'}</Text>
         <Text style={cl.successTitle}>Territory Claimed</Text>
 
-        {/* Memo card — shows exactly what was recorded on-chain */}
+        {/* Memo card */}
         <View style={cl.memoCard}>
           <View style={cl.memoRow}>
             <Text style={cl.memoKey}>App</Text>
@@ -518,7 +522,6 @@ const ClaimSection = ({ tier, city, walletAddress, signAndSendTransaction }) => 
               {txSig}
             </Text>
           </View>
-          {/* Copy button */}
           <TouchableOpacity style={cl.copyBtn} onPress={handleCopy} activeOpacity={0.7}>
             <Text style={cl.copyBtnText}>{copied ? '✓ Copied' : 'Copy Memo JSON'}</Text>
           </TouchableOpacity>
@@ -537,6 +540,11 @@ const ClaimSection = ({ tier, city, walletAddress, signAndSendTransaction }) => 
           >
             <Text style={cl.explorerBtnText}>View on Explorer →</Text>
           </LinearGradient>
+        </TouchableOpacity>
+
+        {/* Claim Again — resets this city's claim so user can re-claim */}
+        <TouchableOpacity style={cl.claimAgainBtn} onPress={onReset} activeOpacity={0.7}>
+          <Text style={cl.claimAgainText}>Claim Again</Text>
         </TouchableOpacity>
       </View>
     );
@@ -653,6 +661,8 @@ const cl = StyleSheet.create({
   memoValTx:      { fontSize: 10, color: '#888', fontFamily: 'monospace' },
   copyBtn:        { marginTop: 10, paddingVertical: 7, alignItems: 'center', borderRadius: 6, borderWidth: 1, borderColor: '#333' },
   copyBtnText:    { fontSize: 12, color: '#666', fontWeight: '600', letterSpacing: 0.5 },
+  claimAgainBtn:  { marginTop: 10, paddingVertical: 8, alignItems: 'center' },
+  claimAgainText: { fontSize: 12, color: '#555', textDecorationLine: 'underline' },
   explorerBtn:      { borderRadius: 10, overflow: 'hidden' },
   explorerBtnGrad:  { paddingVertical: 12, alignItems: 'center' },
   explorerBtnText:  { fontSize: 14, fontWeight: '800', color: P.black, letterSpacing: 0.5 },
@@ -677,11 +687,13 @@ const EmptyState = () => (
 export default function EmpireScreen() {
   const { walletAddress, balance, isConnected, signAndSendTransaction } = useWallet();
 
-  const [city,        setCity]        = useState(CityType.MANHATTAN);
-  const [solPrice,    setSolPrice]    = useState(0);
-  const [currentTier, setCurrentTier] = useState(null);
-  const [upgrade,     setUpgrade]     = useState(null);
-  const [isLoading,   setIsLoading]   = useState(false);
+  const [city,          setCity]          = useState(CityType.MANHATTAN);
+  const [solPrice,      setSolPrice]      = useState(0);
+  const [currentTier,   setCurrentTier]   = useState(null);
+  const [upgrade,       setUpgrade]       = useState(null);
+  const [isLoading,     setIsLoading]     = useState(false);
+  // Per-city claim results — { MANHATTAN: { txSig, ts } | null, DUBAI: ... }
+  const [claimedByCity, setClaimedByCity] = useState({});
 
   const scrollRef = useRef(null);
 
@@ -840,6 +852,9 @@ export default function EmpireScreen() {
             city={city}
             walletAddress={walletAddress}
             signAndSendTransaction={signAndSendTransaction}
+            claimedResult={claimedByCity[city] ?? null}
+            onClaimed={(sig, ts) => setClaimedByCity(prev => ({ ...prev, [city]: { txSig: sig, ts } }))}
+            onReset={() => setClaimedByCity(prev => ({ ...prev, [city]: null }))}
           />
         )}
 
