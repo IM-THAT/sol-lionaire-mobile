@@ -391,7 +391,7 @@ export default function HomeScreen() {
       // Capture share card as a temp file (Android requires file:// URI, not data: URI)
       const tmpPath = await captureRef(shareCardRef, { format: 'png', quality: 0.9, result: 'tmpfile' });
 
-      const caption = `Claim your empire: solionaire.com 🚀\n#Solionaire #Solana #SOL #Web3 #LuxuryStatusLayer`;
+      const caption = `Claim your empire: solionaire.com 🚀\n\n#Solionaire #Solana #SOL #Web3 #LuxuryStatusLayer`;
 
       await RNShare.open({
         url: `file://${tmpPath}`,
@@ -939,7 +939,7 @@ const sc = StyleSheet.create({
     alignItems: 'center',
     paddingHorizontal: 60,
     paddingTop: 32,
-    paddingBottom: 16,
+    paddingBottom: 36,
     flex: 1,
   },
   propName: {
