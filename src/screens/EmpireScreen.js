@@ -12,7 +12,7 @@
 import React, { useState, useEffect, useRef } from 'react';
 import {
   View, Text, ScrollView, StyleSheet,
-  TouchableOpacity, Image, Linking, ActivityIndicator, Animated,
+  TouchableOpacity, Image, Linking, ActivityIndicator, Animated, Clipboard,
 } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { LinearGradient } from 'expo-linear-gradient';
@@ -423,6 +423,7 @@ const fc = StyleSheet.create({
 const ClaimSection = ({ tier, city, walletAddress, signAndSendTransaction }) => {
   const [status, setStatus] = useState('idle'); // idle | signing | confirming | success | error
   const [txSig,  setTxSig]  = useState(null);
+  const [copied, setCopied] = useState(false);
 
   // Gold burst overlay + button bounce on press
   const flashAnim = useRef(new Animated.Value(0)).current;
@@ -453,6 +454,23 @@ const ClaimSection = ({ tier, city, walletAddress, signAndSendTransaction }) => 
   };
 
   if (status === 'success') {
+    const claimedAt = new Date().toLocaleString('en-US', {
+      month: 'short', day: 'numeric', year: 'numeric',
+      hour: '2-digit', minute: '2-digit',
+    });
+    const memoObj = {
+      app: 'Solionaire',
+      level: tier.level,
+      name: tier.names[city],
+      city: city.toLowerCase(),
+      ts: Math.floor(Date.now() / 1000),
+    };
+    const handleCopy = () => {
+      Clipboard.setString(JSON.stringify(memoObj, null, 2));
+      setCopied(true);
+      setTimeout(() => setCopied(false), 2000);
+    };
+
     return (
       <View style={[cl.wrap, cl.wrapSuccess]}>
         <LinearGradient
@@ -466,11 +484,47 @@ const ClaimSection = ({ tier, city, walletAddress, signAndSendTransaction }) => 
         </View>
         <Text style={cl.successEye}>ON-CHAIN VERIFIED · {DEV_MODE ? 'DEVNET' : 'MAINNET'}</Text>
         <Text style={cl.successTitle}>Territory Claimed</Text>
-        <Text style={cl.successSub}>
-          Level {tier.level} · {tier.names[city]}{'\n'}
-          recorded on Solana {DEV_MODE ? 'Devnet' : 'Mainnet'}
-        </Text>
-        {/* Styled explorer button */}
+
+        {/* Memo card — shows exactly what was recorded on-chain */}
+        <View style={cl.memoCard}>
+          <View style={cl.memoRow}>
+            <Text style={cl.memoKey}>App</Text>
+            <Text style={cl.memoVal}>Solionaire</Text>
+          </View>
+          <View style={cl.memoDivider} />
+          <View style={cl.memoRow}>
+            <Text style={cl.memoKey}>Level</Text>
+            <Text style={cl.memoVal}>{tier.level}</Text>
+          </View>
+          <View style={cl.memoDivider} />
+          <View style={cl.memoRow}>
+            <Text style={cl.memoKey}>Property</Text>
+            <Text style={[cl.memoVal, cl.memoValSmall]}>{tier.names[city]}</Text>
+          </View>
+          <View style={cl.memoDivider} />
+          <View style={cl.memoRow}>
+            <Text style={cl.memoKey}>City</Text>
+            <Text style={cl.memoVal}>{city === 'MANHATTAN' ? 'New York' : 'Dubai'}</Text>
+          </View>
+          <View style={cl.memoDivider} />
+          <View style={cl.memoRow}>
+            <Text style={cl.memoKey}>Time</Text>
+            <Text style={[cl.memoVal, cl.memoValSmall]}>{claimedAt}</Text>
+          </View>
+          <View style={cl.memoDivider} />
+          <View style={cl.memoRow}>
+            <Text style={cl.memoKey}>Tx</Text>
+            <Text style={[cl.memoVal, cl.memoValTx]} numberOfLines={1} ellipsizeMode="middle">
+              {txSig}
+            </Text>
+          </View>
+          {/* Copy button */}
+          <TouchableOpacity style={cl.copyBtn} onPress={handleCopy} activeOpacity={0.7}>
+            <Text style={cl.copyBtnText}>{copied ? '✓ Copied' : 'Copy Memo JSON'}</Text>
+          </TouchableOpacity>
+        </View>
+
+        {/* Explorer button */}
         <TouchableOpacity
           style={cl.explorerBtn}
           onPress={() => Linking.openURL(getExplorerUrl(txSig))}
@@ -589,6 +643,16 @@ const cl = StyleSheet.create({
   successEye:   { fontSize: 9, color: P.goldLight, letterSpacing: 3, fontWeight: '600', marginBottom: 8 },
   successTitle: { fontSize: 20, fontWeight: '700', color: P.goldLight, marginBottom: 8 },
   successSub:   { fontSize: 13, color: P.gray, lineHeight: 20, marginBottom: 16 },
+  // memo card
+  memoCard:       { width: '100%', backgroundColor: '#111', borderRadius: 10, borderWidth: 1, borderColor: '#2a2a2a', paddingHorizontal: 14, paddingVertical: 8, marginBottom: 14 },
+  memoRow:        { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', paddingVertical: 7 },
+  memoDivider:    { height: 1, backgroundColor: '#222' },
+  memoKey:        { fontSize: 11, color: '#666', fontWeight: '600', letterSpacing: 1, textTransform: 'uppercase', width: 58 },
+  memoVal:        { fontSize: 13, color: P.goldLight, fontWeight: '600', flex: 1, textAlign: 'right' },
+  memoValSmall:   { fontSize: 11 },
+  memoValTx:      { fontSize: 10, color: '#888', fontFamily: 'monospace' },
+  copyBtn:        { marginTop: 10, paddingVertical: 7, alignItems: 'center', borderRadius: 6, borderWidth: 1, borderColor: '#333' },
+  copyBtnText:    { fontSize: 12, color: '#666', fontWeight: '600', letterSpacing: 0.5 },
   explorerBtn:      { borderRadius: 10, overflow: 'hidden' },
   explorerBtnGrad:  { paddingVertical: 12, alignItems: 'center' },
   explorerBtnText:  { fontSize: 14, fontWeight: '800', color: P.black, letterSpacing: 0.5 },
