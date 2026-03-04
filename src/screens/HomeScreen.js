@@ -391,15 +391,7 @@ export default function HomeScreen() {
       // Capture share card as base64 PNG
       const uri = await captureRef(shareCardRef, { format: 'png', quality: 0.9, result: 'base64' });
 
-      const usdVal = totalUSD.toLocaleString(undefined, { maximumFractionDigits: 0 });
-      const percentileStr = (mappingResult?.percentile && mappingResult.percentile !== 'Newcomer')
-        ? `🏆 ${mappingResult.percentile} of SOL Holders\n`
-        : '';
-      const caption =
-        `🏛️ Level ${levelNum}: ${mappingResult?.propertyName ?? ''}\n` +
-        `💰 ${(solBalance ?? 0).toFixed(4)} SOL ≈ $${usdVal}\n` +
-        percentileStr +
-        `\n#Solionaire #Solana #SOL #LuxuryStatusLayer #Web3`;
+      const caption = `Claim your empire: solionaire.com 🚀`;
 
       await RNShare.open({
         url: `data:image/png;base64,${uri}`,
