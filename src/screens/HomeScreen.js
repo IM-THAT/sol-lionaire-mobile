@@ -388,20 +388,22 @@ export default function HomeScreen() {
     if (isSharing) return;
     setIsSharing(true);
     try {
-      // Capture share card as base64 PNG
-      const uri = await captureRef(shareCardRef, { format: 'png', quality: 0.9, result: 'base64' });
+      // Capture share card as a temp file (Android requires file:// URI, not data: URI)
+      const tmpPath = await captureRef(shareCardRef, { format: 'png', quality: 0.9, result: 'tmpfile' });
 
       const caption = `Claim your empire: solionaire.com 🚀\n#Solionaire #Solana #SOL #Web3 #LuxuryStatusLayer`;
 
       await RNShare.open({
-        url: `data:image/png;base64,${uri}`,
+        url: `file://${tmpPath}`,
         type: 'image/png',
         message: caption,
         title: 'Share My Status',
         failOnCancel: false,
       });
     } catch (e) {
-      console.log('Share failed', e);
+      if (e?.message !== 'User did not share') {
+        console.log('Share failed:', e?.message ?? e);
+      }
     } finally {
       setIsSharing(false);
     }
