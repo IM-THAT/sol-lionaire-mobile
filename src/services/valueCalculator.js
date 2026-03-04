@@ -1,6 +1,7 @@
 /**
- * Value Calculator - Sol-lionaire v0.5
+ * Value Calculator - Sol-lionaire
  * 10-Level Hyper-Real Ownership System
+ * Tier thresholds based on total USD value (SOL × price).
  */
 
 export const CityType = {
@@ -8,7 +9,6 @@ export const CityType = {
   DUBAI: 'DUBAI',
 };
 
-// Real estate price data (Benchmark as of Feb 2024)
 export const CITY_CONFIG = {
   MANHATTAN: {
     pricePerSqm: 22000,
@@ -30,34 +30,29 @@ export const CITY_CONFIG = {
   },
 };
 
-// (KRW removed — all values in USD based on real-time Solana price)
-
-// 10-Level Property System — aligned with spec KRW thresholds
+// 10-Level Property System — thresholds in USD (SOL × live price)
 export const PROPERTY_TIERS = [
   {
     id: 'level1',
     level: 1,
-    minSOL: 0,
-    maxSOL: 10,
-    minUSD: 140,
-    maxUSD: 1480,
-    krwLabel: '~₩2M',
+    minUSD: 0,
+    maxUSD: 500,
     color: '#4A4A4A',
     names: {
-      MANHATTAN: 'The Urban Grid (Manhole)',
-      DUBAI: 'The Paving Stone (Marina)',
+      MANHATTAN: 'Times Square Mini Neon Slot',
+      DUBAI: 'Desert Oasis Gold Plot',
     },
     descriptions: {
-      MANHATTAN: 'A deeded manhole cover on the Lower Manhattan grid',
-      DUBAI: 'Your name etched in Marina Walk paving stone',
+      MANHATTAN: 'Personal message on Times Square neon, 24-hour rental up to $500',
+      DUBAI: 'Low-cost desert mini plot — simulated ownership',
     },
     locations: {
-      MANHATTAN: 'Lower Manhattan Infrastructure',
-      DUBAI: 'Dubai Marina Walk',
+      MANHATTAN: 'Times Square, Manhattan',
+      DUBAI: 'Dubai Desert',
     },
     narratives: {
-      MANHATTAN: 'Every empire begins beneath the surface.',
-      DUBAI: 'The Marina waterfront — your first mark.',
+      MANHATTAN: 'Your first pixel in the skyline.',
+      DUBAI: 'A miracle starts in the sand.',
     },
     imageKey: {
       MANHATTAN: 'ny_level1',
@@ -67,27 +62,24 @@ export const PROPERTY_TIERS = [
   {
     id: 'level2',
     level: 2,
-    minSOL: 10,
-    maxSOL: 55,
-    minUSD: 1480,
-    maxUSD: 7400,
-    krwLabel: '~₩10M',
+    minUSD: 500,
+    maxUSD: 3000,
     color: '#5A5A5A',
     names: {
-      MANHATTAN: 'The Park Bench (Central Park)',
-      DUBAI: 'The Golden Smart Lamp',
+      MANHATTAN: 'Subway Ad Panel',
+      DUBAI: 'Gold Souk Mini Stall',
     },
     descriptions: {
-      MANHATTAN: 'A deeded park bench in Central Park with a gold plaque',
-      DUBAI: 'A sponsored smart lamp on the Marina promenade',
+      MANHATTAN: 'Premium subway ad panel, 1-month rental up to $3,000',
+      DUBAI: 'Gold Souk mini stall rental, 1–3 months up to $3,000',
     },
     locations: {
-      MANHATTAN: 'Central Park, Manhattan',
-      DUBAI: 'Dubai Marina Promenade',
+      MANHATTAN: 'New York City Subway',
+      DUBAI: 'Dubai Gold Souk',
     },
     narratives: {
-      MANHATTAN: 'A permanent mark in the city that never sleeps.',
-      DUBAI: 'Your light shines on the waterfront.',
+      MANHATTAN: "Your message runs through NYC's veins.",
+      DUBAI: 'Claim your corner in the City of Gold.',
     },
     imageKey: {
       MANHATTAN: 'ny_level2',
@@ -97,27 +89,24 @@ export const PROPERTY_TIERS = [
   {
     id: 'level3',
     level: 3,
-    minSOL: 55,
-    maxSOL: 270,
-    minUSD: 7400,
-    maxUSD: 37000,
-    krwLabel: '~₩50M',
+    minUSD: 3000,
+    maxUSD: 100000,
     color: '#6A6A6A',
     names: {
-      MANHATTAN: 'The Storage Vault (Deeded)',
-      DUBAI: 'The Private Parking Stall',
+      MANHATTAN: 'Wall Street Gold Vault Box',
+      DUBAI: 'Dubai Marina Private Parking Stall',
     },
     descriptions: {
-      MANHATTAN: 'A deeded underground storage vault in the Financial District',
-      DUBAI: 'A private deeded parking stall in Marina Bay',
+      MANHATTAN: 'Private vault box in the Financial District — annual lease up to $100k',
+      DUBAI: 'Private deeded parking stall at Dubai Marina — up to $100k',
     },
     locations: {
-      MANHATTAN: 'Financial District',
-      DUBAI: 'Marina Bay',
+      MANHATTAN: 'Wall Street, Financial District',
+      DUBAI: 'Dubai Marina',
     },
     narratives: {
-      MANHATTAN: 'Your assets are secured in the heart of finance.',
-      DUBAI: 'Premium positioning in the new world.',
+      MANHATTAN: "Wall Street's heartbeat, now yours.",
+      DUBAI: 'Your anchor in the heart of the Marina.',
     },
     imageKey: {
       MANHATTAN: 'ny_level3',
@@ -127,27 +116,24 @@ export const PROPERTY_TIERS = [
   {
     id: 'level4',
     level: 4,
-    minSOL: 270,
-    maxSOL: 1080,
-    minUSD: 37000,
-    maxUSD: 148000,
-    krwLabel: '~₩200M',
+    minUSD: 100000,
+    maxUSD: 300000,
     color: '#7D7D7D',
     names: {
-      MANHATTAN: 'The Manhattan Parking Bay',
-      DUBAI: 'The Yacht Mooring Berth',
+      MANHATTAN: "Hell's Kitchen Private Parking Spot",
+      DUBAI: 'Dubai Marina Yacht Mooring Berth',
     },
     descriptions: {
-      MANHATTAN: 'A deeded indoor parking bay in Midtown Manhattan',
-      DUBAI: 'A private yacht mooring berth at the Dubai Marina',
+      MANHATTAN: "Premium deeded parking spot in Hell's Kitchen — up to $300k",
+      DUBAI: 'Private yacht mooring berth at Dubai Marina — up to $300k',
     },
     locations: {
-      MANHATTAN: 'Midtown Manhattan',
+      MANHATTAN: "Hell's Kitchen, Manhattan",
       DUBAI: 'Dubai Marina',
     },
     narratives: {
-      MANHATTAN: 'Your first real estate holding in the concrete jungle.',
-      DUBAI: 'Where the waterway meets your ambition.',
+      MANHATTAN: 'Your private space in NYC.',
+      DUBAI: 'The ocean is your new driveway.',
     },
     imageKey: {
       MANHATTAN: 'ny_level4',
@@ -157,27 +143,24 @@ export const PROPERTY_TIERS = [
   {
     id: 'level5',
     level: 5,
-    minSOL: 1080,
-    maxSOL: 3240,
-    minUSD: 148000,
-    maxUSD: 444000,
-    krwLabel: '~₩600M',
+    minUSD: 300000,
+    maxUSD: 750000,
     color: '#8F8F8F',
     names: {
-      MANHATTAN: 'The Entry Studio',
-      DUBAI: 'The Marina Sky Studio',
+      MANHATTAN: 'Brooklyn Heights Gold Rooftop Studio',
+      DUBAI: 'JBR Beachfront Gold Studio',
     },
     descriptions: {
-      MANHATTAN: 'Compact luxury studio in Brooklyn Heights',
-      DUBAI: 'High-floor minimalist studio with marina view',
+      MANHATTAN: 'Premium rooftop studio in Brooklyn Heights — up to $750k',
+      DUBAI: 'Beachfront gold studio at Jumeirah Beach Residence — up to $750k',
     },
     locations: {
       MANHATTAN: 'Brooklyn Heights',
-      DUBAI: 'Dubai Marina Sky',
+      DUBAI: 'Jumeirah Beach Residence (JBR)',
     },
     narratives: {
-      MANHATTAN: 'Your first real space in the skyline.',
-      DUBAI: 'Modern living in the city of tomorrow.',
+      MANHATTAN: 'Own the Brooklyn sunset.',
+      DUBAI: 'Sun, sea, and your own slice of the beach.',
     },
     imageKey: {
       MANHATTAN: 'ny_level5',
@@ -187,27 +170,24 @@ export const PROPERTY_TIERS = [
   {
     id: 'level6',
     level: 6,
-    minSOL: 3240,
-    maxSOL: 8100,
-    minUSD: 444000,
-    maxUSD: 1110000,
-    krwLabel: '~₩1.5B',
+    minUSD: 750000,
+    maxUSD: 1500000,
     color: '#A8A8A8',
     names: {
-      MANHATTAN: 'The Luxury 1-Bed Condo',
-      DUBAI: 'The Palm Sky Residence',
+      MANHATTAN: 'Chelsea High-Rise Gold 1-Bed Condo',
+      DUBAI: 'Palm Jumeirah Gold Sky 1-Bed',
     },
     descriptions: {
-      MANHATTAN: 'Modern luxury 1-bedroom in Chelsea',
-      DUBAI: 'Sky-high Palm Jumeirah 1-bedroom residence',
+      MANHATTAN: 'Luxury high-rise 1-bedroom in Chelsea — up to $1.5M',
+      DUBAI: 'Sky-high Palm Jumeirah 1-bedroom residence — up to $1.5M',
     },
     locations: {
       MANHATTAN: 'Chelsea, Manhattan',
-      DUBAI: 'Palm Jumeirah Sky',
+      DUBAI: 'Palm Jumeirah',
     },
     narratives: {
       MANHATTAN: 'You have arrived in the heart of culture.',
-      DUBAI: 'Vertical luxury redefined.',
+      DUBAI: 'Living above the miracle of the Palm.',
     },
     imageKey: {
       MANHATTAN: 'ny_level6',
@@ -217,19 +197,16 @@ export const PROPERTY_TIERS = [
   {
     id: 'level7',
     level: 7,
-    minSOL: 8100,
-    maxSOL: 27000,
-    minUSD: 1110000,
-    maxUSD: 3700000,
-    krwLabel: '~₩5B',
+    minUSD: 1500000,
+    maxUSD: 3500000,
     color: '#C0C0C0',
     names: {
-      MANHATTAN: 'The Prime 2-Bed Residence',
-      DUBAI: 'The Palm Sea-view Suite',
+      MANHATTAN: 'SoHo Artist Gold 2-Bed Loft',
+      DUBAI: 'Palm Arabian Gold Sea-view 2-Bed Suite',
     },
     descriptions: {
-      MANHATTAN: 'Spacious 2-bedroom SoHo loft with classic brickwork',
-      DUBAI: '2-bed suite with full Arabian Sea panorama on the Palm',
+      MANHATTAN: 'Spacious 2-bedroom SoHo artist loft — up to $3.5M',
+      DUBAI: '2-bed suite with full Arabian Sea panorama on the Palm — up to $3.5M',
     },
     locations: {
       MANHATTAN: 'SoHo, Manhattan',
@@ -247,26 +224,23 @@ export const PROPERTY_TIERS = [
   {
     id: 'level8',
     level: 8,
-    minSOL: 27000,
-    maxSOL: 81000,
-    minUSD: 3700000,
-    maxUSD: 11100000,
-    krwLabel: '~₩15B',
+    minUSD: 3500000,
+    maxUSD: 15000000,
     color: '#D4AF37',
     names: {
-      MANHATTAN: 'The Central Park Penthouse',
-      DUBAI: 'The Palm Frond Villa',
+      MANHATTAN: 'Central Park South Gold Penthouse',
+      DUBAI: 'Palm Frond Signature Gold Villa',
     },
     descriptions: {
-      MANHATTAN: 'Full-floor penthouse overlooking Central Park',
-      DUBAI: 'Private frond villa with infinity pool on the Palm',
+      MANHATTAN: 'Full-floor penthouse overlooking Central Park — up to $15M',
+      DUBAI: 'Private frond villa with infinity pool on the Palm — up to $15M',
     },
     locations: {
       MANHATTAN: 'Central Park South',
       DUBAI: 'Palm Jumeirah Private Frond',
     },
     narratives: {
-      MANHATTAN: 'Old money elegance, new world power.',
+      MANHATTAN: 'Central Park is your front yard.',
       DUBAI: 'Private paradise where sand meets sea.',
     },
     imageKey: {
@@ -277,26 +251,23 @@ export const PROPERTY_TIERS = [
   {
     id: 'level9',
     level: 9,
-    minSOL: 81000,
-    maxSOL: 270000,
-    minUSD: 11100000,
-    maxUSD: 37000000,
-    krwLabel: '~₩50B',
+    minUSD: 15000000,
+    maxUSD: 20000000,
     color: '#E8C96A',
     names: {
-      MANHATTAN: 'The UES Townhouse',
-      DUBAI: 'The Emirates Hills Manor',
+      MANHATTAN: "Billionaires' Row Gold Trophy Penthouse",
+      DUBAI: 'Emirates Hills Gold-Leaf Manor',
     },
     descriptions: {
-      MANHATTAN: 'Historic multi-storey townhouse on the Upper East Side',
-      DUBAI: 'Grand manor estate in the Emirates Hills gated community',
+      MANHATTAN: "Trophy penthouse on Billionaires' Row — up to $20M",
+      DUBAI: 'Grand gold-leaf manor in Emirates Hills gated community — up to $20M',
     },
     locations: {
-      MANHATTAN: 'Upper East Side, Manhattan',
+      MANHATTAN: "Billionaires' Row, Manhattan",
       DUBAI: 'Emirates Hills',
     },
     narratives: {
-      MANHATTAN: 'You stand above the city, looking down on Central Park.',
+      MANHATTAN: 'The pinnacle of the 0.01%.',
       DUBAI: 'Royal treatment is your new standard.',
     },
     imageKey: {
@@ -307,27 +278,24 @@ export const PROPERTY_TIERS = [
   {
     id: 'level10',
     level: 10,
-    minSOL: 270000,
-    maxSOL: Infinity,
-    minUSD: 37000000,
+    minUSD: 20000000,
     maxUSD: Infinity,
-    krwLabel: '₩50B+',
     color: '#FFD700',
     names: {
-      MANHATTAN: 'The Landmark Apex (Empire)',
-      DUBAI: 'The Sovereign Apex (Burj)',
+      MANHATTAN: 'Apex Empire Crown',
+      DUBAI: 'Sovereign Burj Gold Sky Palace',
     },
     descriptions: {
-      MANHATTAN: 'The pinnacle of Manhattan — your name on the skyline',
-      DUBAI: 'The crown jewel of the Burj Khalifa district',
+      MANHATTAN: 'Empire State Gold Crown Landmark — simulated ownership, $20M+ reality basis',
+      DUBAI: 'Burj Khalifa Sovereign Gold Sky Palace — simulated ownership, $20M+ reality basis',
     },
     locations: {
-      MANHATTAN: 'Manhattan Landmark',
+      MANHATTAN: 'Empire State Building, Manhattan',
       DUBAI: 'Burj Khalifa District',
     },
     narratives: {
       MANHATTAN: 'You are not just in New York. You ARE New York.',
-      DUBAI: 'Sovereignty. The city bends to your will.',
+      DUBAI: 'Beyond the limits. You are the Empire.',
     },
     imageKey: {
       MANHATTAN: 'ny_level10',
@@ -337,42 +305,77 @@ export const PROPERTY_TIERS = [
 ];
 
 class ValueCalculator {
-  getTierForSOL(solAmount) {
-    return (
-      PROPERTY_TIERS.find(t => solAmount >= t.minSOL && solAmount < t.maxSOL) ||
-      PROPERTY_TIERS[0]  // fallback: < 1 SOL → Level 1 (not Level 10)
-    );
+  // Primary lookup — based on total USD value (SOL × live price)
+  getTierForUSD(usdAmount) {
+    const amount = (typeof usdAmount === 'number' && isFinite(usdAmount) && usdAmount >= 0)
+      ? usdAmount : 0;
+    return PROPERTY_TIERS.find(t => amount >= t.minUSD && amount < t.maxUSD) || PROPERTY_TIERS[0];
   }
-  
-  getPercentile(solAmount) {
-    if (solAmount < 1) return "Newcomer";
-    
-    // Log scale continuous calculation
-    const logSOL = Math.log10(solAmount);
-    const logMax = Math.log10(500000); // Level 10 threshold
-    const rawPercentile = (logSOL / logMax) * 100;
-    
-    const rank = Math.round(100 - rawPercentile);
 
-    if (rank < 1) return "Top 0.1%";
-    if (rank < 2) return "Top 1%";
-    if (rank < 5) return "Top 5%";
-    if (rank < 10) return "Top 10%";
-    if (rank < 20) return "Top 20%";
-    if (rank < 40) return "Top 40%";
-    if (rank < 60) return "Top 60%";
-    if (rank < 80) return "Top 80%";
-    return "Top 90%";
+  getTierByLevel(level) {
+    return PROPERTY_TIERS.find(t => t.level === level) ?? PROPERTY_TIERS[0];
   }
-  calculateStarProgress(solAmount, tier) {
-    const progress = ((solAmount - tier.minSOL) / (tier.maxSOL - tier.minSOL)) * 100;
+
+  // 10% stability buffer — prevents rapid level yo-yo when USD value
+  // hovers around a threshold. Only downgrades once value drops 10% below
+  // the held tier's entry point.
+  getTierForUSDBuffered(usdAmount, prevLevel = null) {
+    const naturalTier = this.getTierForUSD(usdAmount);
+    if (prevLevel === null || naturalTier.level >= prevLevel) {
+      return naturalTier;
+    }
+    const heldTier   = this.getTierByLevel(prevLevel);
+    const bufferLine = heldTier.minUSD * 0.9;
+    return usdAmount >= bufferLine ? heldTier : naturalTier;
+  }
+
+  getPercentile(usdAmount) {
+    if (!usdAmount || usdAmount < 1) return 'Newcomer';
+
+    // 2026 Q1 realistic SOL holder distribution — log-interpolated between anchor points.
+    // Each point: { usd: threshold, topPercent: % of holders above that value }
+    // Start at $1 (not $0) to avoid log(0) asymptote distortion.
+    const DIST = [
+      { usd: 1,        topPercent: 70.00 },  // $1+  → bottom 30% already out
+      { usd: 500,      topPercent: 30.00 },  // Level 1 max
+      { usd: 3000,     topPercent: 12.00 },  // Level 2 max
+      { usd: 100000,   topPercent:  2.50 },  // Level 3 max
+      { usd: 300000,   topPercent:  0.80 },  // Level 4 max
+      { usd: 750000,   topPercent:  0.30 },  // Level 5 max
+      { usd: 1500000,  topPercent:  0.10 },  // Level 6 max
+      { usd: 3500000,  topPercent:  0.05 },  // Level 7 max
+      { usd: 15000000, topPercent:  0.02 },  // Level 8 max
+      { usd: 20000000, topPercent:  0.01 },  // Level 9/10
+    ];
+
+    if (usdAmount >= DIST[DIST.length - 1].usd) return `Top ${DIST[DIST.length - 1].topPercent}%`;
+
+    for (let i = 0; i < DIST.length - 1; i++) {
+      const lo = DIST[i];
+      const hi = DIST[i + 1];
+      if (usdAmount >= lo.usd && usdAmount < hi.usd) {
+        const logLo  = Math.log(lo.usd);
+        const logHi  = Math.log(hi.usd);
+        const logVal = Math.log(usdAmount);
+        const t      = (logVal - logLo) / (logHi - logLo);
+        const pct    = lo.topPercent - t * (lo.topPercent - hi.topPercent);
+        // Round to 1 decimal for display; hide trailing .0
+        const rounded = Math.round(pct * 10) / 10;
+        return `Top ${rounded % 1 === 0 ? rounded.toFixed(0) : rounded}%`;
+      }
+    }
+
+    return 'Newcomer';
+  }
+
+  calculateStarProgress(usdAmount, tier) {
+    const range = tier.maxUSD === Infinity ? tier.minUSD * 2 : tier.maxUSD - tier.minUSD;
+    const progress = ((usdAmount - tier.minUSD) / range) * 100;
     const clampedProgress = Math.min(Math.max(progress, 0), 99.9);
-    
     let stars = 0;
     if (clampedProgress >= 67) stars = 3;
     else if (clampedProgress >= 34) stars = 2;
     else stars = 1;
-
     return {
       progress: clampedProgress,
       stars,
@@ -380,14 +383,15 @@ class ValueCalculator {
     };
   }
 
-  determineMapping({ solAmount, solPrice, cityType = 'MANHATTAN' }) {
-    const tier = this.getTierForSOL(solAmount);
+  // _tierOverride: pre-computed buffered tier from getTierForUSDBuffered()
+  determineMapping({ solAmount, solPrice, cityType = 'MANHATTAN', _tierOverride = null }) {
     const totalUSD = solAmount * solPrice;
-    const city = CITY_CONFIG[cityType];
-    const starInfo = this.calculateStarProgress(solAmount, tier);
-
-    const percentile = this.getPercentile(solAmount);
+    const tier     = _tierOverride ?? this.getTierForUSD(totalUSD);
+    const city     = CITY_CONFIG[cityType];
+    const starInfo = this.calculateStarProgress(totalUSD, tier);
+    const percentile = this.getPercentile(totalUSD);
     const upgrade    = this.calculateUpgrade({ solAmount, solPrice, cityType });
+
     return {
       totalValue: totalUSD,
       cityType,
@@ -406,23 +410,25 @@ class ValueCalculator {
   }
 
   calculateUpgrade({ solAmount, solPrice, cityType = 'MANHATTAN' }) {
-    const currentTier = this.getTierForSOL(solAmount);
+    const totalUSD   = solAmount * solPrice;
+    const currentTier  = this.getTierForUSD(totalUSD);
     const currentIndex = PROPERTY_TIERS.indexOf(currentTier);
-    const nextTier = PROPERTY_TIERS[currentIndex + 1];
+    const nextTier     = PROPERTY_TIERS[currentIndex + 1];
 
     if (!nextTier) {
       return {
         message: '👑 Maximum level reached.',
         solNeeded: 0,
+        usdNeeded: 0,
         nextTier: null,
         currentTier,
         progress: 100,
       };
     }
 
-    const solNeeded = nextTier.minSOL - solAmount;
-    const usdNeeded = solNeeded * solPrice;
-    const progress = ((solAmount - currentTier.minSOL) / (nextTier.minSOL - currentTier.minSOL)) * 100;
+    const usdNeeded = Math.max(0, nextTier.minUSD - totalUSD);
+    const solNeeded = solPrice > 0 ? usdNeeded / solPrice : 0;
+    const progress  = ((totalUSD - currentTier.minUSD) / (nextTier.minUSD - currentTier.minUSD)) * 100;
 
     return {
       solNeeded,

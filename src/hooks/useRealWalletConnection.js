@@ -74,7 +74,7 @@ export const useRealWalletConnection = () => {
         // ★ 핵심: 잔액 기다리지 않고 먼저 연결 상태 업데이트!
         setWalletAddress(pubkeyStr);
         setIsConnected(true);
-        setWalletName(walletId === 'phantom' ? '👻 Phantom' : '🔐 Seed Vault');
+        setWalletName(walletId === 'phantom' ? '👻 Phantom' : 'Seed Vault');
         setAuthToken(token);
         setIsLoading(false);
 
@@ -128,7 +128,12 @@ export const useRealWalletConnection = () => {
           transaction.feePayer = new PublicKey(walletAddress);
           const [signedTx] = await wallet.signTransactions({ transactions: [transaction] });
           const sig = await connection.sendRawTransaction(signedTx.serialize());
-          await connection.confirmTransaction(sig);
+          await Promise.race([
+            connection.confirmTransaction(sig, 'processed'),
+            new Promise((_, reject) =>
+              setTimeout(() => reject(new Error('Confirmation timeout (15s)')), 15000)
+            ),
+          ]);
           return sig;
         });
       }

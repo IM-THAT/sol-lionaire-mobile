@@ -1,12 +1,6 @@
 import React, { useEffect, useRef, useState } from 'react';
 import { View, Text, StyleSheet, Animated } from 'react-native';
-
-const P = {
-  black: '#0A0A0A',
-  gold: '#C9A84C',
-  goldLight: '#E8C96A',
-  offWhite: '#F5F0E8',
-};
+import { P } from '../constants/theme';
 
 export const CalculatingAnimation = ({ visible }) => {
   const fadeAnim = useRef(new Animated.Value(0)).current;

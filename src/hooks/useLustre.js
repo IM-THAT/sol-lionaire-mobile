@@ -37,7 +37,9 @@ export const useLustre = (walletAddress) => {
       setLustre(current);
       setStreak(data.streak ?? 0);
       setIsMidasTouch(data.midasUntil ? new Date(data.midasUntil) > new Date() : false);
-    } catch { /* silent */ }
+    } catch (e) {
+      console.error('[useLustre] Failed to read lustre state:', e);
+    }
   }, [key]);
 
   // Load on mount / wallet change; poll every 60 s so gauge updates in background
@@ -91,7 +93,9 @@ export const useLustre = (walletAddress) => {
       setLustre(100);
       setStreak(newStreak);
       setIsMidasTouch(midasUntil ? new Date(midasUntil) > new Date() : false);
-    } catch { /* silent */ }
+    } catch (e) {
+      console.error('[useLustre] Failed to write lustre state:', e);
+    }
   }, [key]);
 
   return { lustre, streak, isMidasTouch, buff };

@@ -1,13 +1,6 @@
 /**
  * DistrictScreen — The District
- * Tab 3: Level-gated community hub (MVP concept screen)
- *
- * The Plaza      (Lvl 1–3)  — Open to all
- * The Avenue     (Lvl 4–7)  — Premium holders
- * The High Table (Lvl 8–10) — VVIP apex
- *
- * NOTE: Community features (posts, chat, photos) require a backend.
- * This screen shows the tier-gated structure and Coming Soon state.
+ * Tab 3: Level-gated community hub (concept / coming soon)
  */
 import React from 'react';
 import { View, Text, ScrollView, StyleSheet } from 'react-native';
@@ -15,18 +8,8 @@ import { LinearGradient } from 'expo-linear-gradient';
 import { Ionicons } from '@expo/vector-icons';
 import { useWallet } from '../context/WalletContext';
 import { valueCalculator } from '../services/valueCalculator';
-
-const P = {
-  black:    '#000000',
-  charcoal: '#0A0A0A',
-  dark:     '#141414',
-  border:   '#2A2A2A',
-  gray:     '#888888',
-  offWhite: '#F5F0E8',
-  gold:     '#C9A84C',
-  goldLight:'#E8C96A',
-  goldDeep: '#A07830',
-};
+import { priceDataService } from '../services/pythPriceService';
+import { P } from '../constants/theme';
 
 const DISTRICTS = [
   {
@@ -34,8 +17,9 @@ const DISTRICTS = [
     name: 'The High Table',
     eyebrow: 'VVIP · LEVEL 8 – 10',
     minLevel: 8,
-    description: 'Where the skyline meets sovereignty.\nThe apex of the Sol-lionaire world.',
-    vibe: 'Central Park Penthouse · Burj Khalifa District',
+    icon: '👑',
+    description: 'Where the skyline meets sovereignty. The apex of the Solionaire world.',
+    vibe: 'Central Park Penthouse  ·  Burj Khalifa District',
     accentColors: [P.goldDeep, P.gold, P.goldLight, P.gold, P.goldDeep],
   },
   {
@@ -43,8 +27,9 @@ const DISTRICTS = [
     name: 'The Avenue',
     eyebrow: 'PREMIUM · LEVEL 4 – 7',
     minLevel: 4,
-    description: 'Fifth Avenue meets Sheikh Zayed Road.\nReal holders, real conversations.',
-    vibe: 'SoHo Loft · Palm Jumeirah Frond',
+    icon: '🏛️',
+    description: 'Fifth Avenue meets Sheikh Zayed Road. Real holders, real conversations.',
+    vibe: 'SoHo Loft  ·  Palm Jumeirah Frond',
     accentColors: ['#5A3A10', '#8A5820', P.gold, '#8A5820', '#5A3A10'],
   },
   {
@@ -52,9 +37,10 @@ const DISTRICTS = [
     name: 'The Plaza',
     eyebrow: 'OPEN · LEVEL 1 – 3',
     minLevel: 1,
-    description: 'The starting point of every empire.\nShare strategies and rise together.',
-    vibe: 'Central Park · Dubai Marina Walk',
-    accentColors: ['#333333', '#555555', '#777777', '#555555', '#333333'],
+    icon: '🌆',
+    description: 'The starting point of every empire. Share strategies and rise together.',
+    vibe: 'Central Park  ·  Dubai Marina Walk',
+    accentColors: ['#2A2A2A', '#444444', '#666666', '#444444', '#2A2A2A'],
   },
 ];
 
@@ -67,27 +53,32 @@ const getUserDistrictId = (level) => {
 // ── District Card ─────────────────────────────────────────────────────────────
 const DistrictCard = ({ district, isLocked, isCurrent }) => (
   <View style={[dc.wrap, isCurrent && dc.wrapCurrent, isLocked && dc.wrapLocked]}>
+    {/* Top accent line */}
     <LinearGradient
-      colors={isLocked ? ['#252525', '#333333', '#252525'] : district.accentColors}
+      colors={isLocked ? ['#1A1A1A', '#2A2A2A', '#1A1A1A'] : district.accentColors}
       start={{ x: 0, y: 0 }} end={{ x: 1, y: 0 }}
       style={dc.accent}
     />
 
-    {/* Header */}
-    <View style={dc.header}>
-      <View style={dc.headerLeft}>
-        <Text style={[dc.eyebrow, isLocked && dc.dimText]}>{district.eyebrow}</Text>
-        <Text style={[dc.name, isLocked && dc.dimText]}>{district.name}</Text>
+    <View style={dc.body}>
+      {/* Left: icon + info */}
+      <View style={dc.left}>
+        <Text style={[dc.icon, isLocked && { opacity: 0.3 }]}>{district.icon}</Text>
+        <View style={dc.info}>
+          <Text style={[dc.eyebrow, isLocked && dc.dim]}>{district.eyebrow}</Text>
+          <Text style={[dc.name, isLocked && dc.dim]}>{district.name}</Text>
+        </View>
       </View>
 
+      {/* Right: status badge */}
       {isLocked ? (
         <View style={dc.lockBadge}>
-          <Ionicons name="lock-closed" size={11} color={P.gold} />
-          <Text style={dc.lockText}> Lvl {district.minLevel}+</Text>
+          <Ionicons name="lock-closed" size={10} color="rgba(201,168,76,0.5)" />
+          <Text style={dc.lockText}> {district.minLevel}+</Text>
         </View>
       ) : isCurrent ? (
         <LinearGradient
-          colors={[P.goldDeep, P.gold, P.goldLight]}
+          colors={[P.goldDeep, P.gold, P.goldLight, P.gold, P.goldDeep]}
           start={{ x: 0, y: 0 }} end={{ x: 1, y: 0 }}
           style={dc.hereBadge}
         >
@@ -100,71 +91,74 @@ const DistrictCard = ({ district, isLocked, isCurrent }) => (
       )}
     </View>
 
-    <Text style={[dc.desc, isLocked && dc.dimText]}>{district.description}</Text>
-    <Text style={[dc.vibe, isLocked ? dc.dimText : { color: P.border }]}>{district.vibe}</Text>
+    {/* Description */}
+    <Text style={[dc.desc, isLocked && dc.dim]}>{district.description}</Text>
+    <Text style={[dc.vibe, isLocked && dc.dim]}>{district.vibe}</Text>
 
-    <View style={dc.divider} />
-
-    {isLocked ? (
-      <View style={dc.footer}>
-        <Ionicons name="lock-closed-outline" size={13} color={P.gold} />
-        <Text style={dc.lockedMsg}>  Reach Level {district.minLevel} to enter</Text>
-      </View>
-    ) : (
-      <View style={dc.footer}>
-        <Ionicons name="time-outline" size={13} color={P.gray} />
-        <Text style={dc.comingSoonMsg}>  Community features coming soon</Text>
-      </View>
-    )}
+    {/* Footer */}
+    <View style={dc.footer}>
+      {isLocked ? (
+        <>
+          <Ionicons name="lock-closed-outline" size={12} color="rgba(201,168,76,0.4)" />
+          <Text style={dc.footerLocked}>  Reach Level {district.minLevel} to unlock</Text>
+        </>
+      ) : (
+        <>
+          <Ionicons name="hourglass-outline" size={12} color={P.gray} />
+          <Text style={dc.footerSoon}>  Community features coming soon</Text>
+        </>
+      )}
+    </View>
   </View>
 );
 
 const dc = StyleSheet.create({
   wrap: {
     marginHorizontal: 16, marginTop: 12,
-    borderRadius: 16, borderWidth: 1, borderColor: P.border,
-    backgroundColor: P.dark, overflow: 'hidden',
+    borderRadius: 18, borderWidth: 1, borderColor: P.border,
+    backgroundColor: '#0D0D0D', overflow: 'hidden',
   },
   wrapCurrent: {
     borderColor: P.gold,
     shadowColor: P.gold,
     shadowOffset: { width: 0, height: 0 },
-    shadowOpacity: 0.35, shadowRadius: 14, elevation: 10,
+    shadowOpacity: 0.3, shadowRadius: 16, elevation: 12,
   },
-  wrapLocked: { opacity: 0.5 },
+  wrapLocked: { opacity: 0.45 },
   accent: { height: 2 },
 
-  header:     { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'flex-start', padding: 16, paddingBottom: 10 },
-  headerLeft: { flex: 1, marginRight: 12 },
-  eyebrow:    { fontSize: 9, color: P.gold, letterSpacing: 3, fontWeight: '600', marginBottom: 4 },
-  name:       { fontSize: 19, fontWeight: '700', color: P.offWhite },
-  dimText:    { color: P.gray },
+  body:  { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', paddingHorizontal: 16, paddingTop: 16, paddingBottom: 10 },
+  left:  { flexDirection: 'row', alignItems: 'center', flex: 1, marginRight: 12 },
+  icon:  { fontSize: 26, marginRight: 12 },
+  info:  { flex: 1 },
+  eyebrow: { fontSize: 8, color: P.gold, letterSpacing: 3, fontWeight: '700', marginBottom: 3 },
+  name:    { fontSize: 18, fontWeight: '700', color: P.offWhite, letterSpacing: 0.3 },
+  dim:     { color: '#444' },
 
-  lockBadge:  { flexDirection: 'row', alignItems: 'center', borderWidth: 1, borderColor: P.gold, borderRadius: 6, paddingHorizontal: 8, paddingVertical: 4 },
-  lockText:   { fontSize: 10, color: P.gold, fontWeight: '700' },
-  hereBadge:  { borderRadius: 6, paddingHorizontal: 10, paddingVertical: 5 },
-  hereText:   { fontSize: 9, color: P.black, fontWeight: '800', letterSpacing: 1 },
-  accessBadge:{ borderWidth: 1, borderColor: P.border, borderRadius: 6, paddingHorizontal: 8, paddingVertical: 4 },
-  accessText: { fontSize: 9, color: P.gray, fontWeight: '600', letterSpacing: 1 },
+  lockBadge:  { flexDirection: 'row', alignItems: 'center', borderWidth: 1, borderColor: 'rgba(201,168,76,0.3)', borderRadius: 8, paddingHorizontal: 9, paddingVertical: 5 },
+  lockText:   { fontSize: 11, color: 'rgba(201,168,76,0.5)', fontWeight: '700' },
+  hereBadge:  { borderRadius: 8, paddingHorizontal: 11, paddingVertical: 6 },
+  hereText:   { fontSize: 8, color: P.black, fontWeight: '900', letterSpacing: 1.5 },
+  accessBadge:{ borderWidth: 1, borderColor: P.border, borderRadius: 8, paddingHorizontal: 9, paddingVertical: 5 },
+  accessText: { fontSize: 8, color: P.gray, fontWeight: '600', letterSpacing: 1 },
 
-  desc:    { fontSize: 13, color: P.gray, lineHeight: 20, paddingHorizontal: 16, marginBottom: 6 },
-  vibe:    { fontSize: 11, paddingHorizontal: 16, marginBottom: 16, fontStyle: 'italic' },
-  divider: { height: 1, backgroundColor: P.border, marginHorizontal: 16, marginBottom: 14 },
+  desc:  { fontSize: 13, color: 'rgba(255,255,255,0.5)', lineHeight: 20, paddingHorizontal: 16, marginBottom: 5 },
+  vibe:  { fontSize: 10, color: P.border, paddingHorizontal: 16, marginBottom: 14, letterSpacing: 0.5, fontStyle: 'italic' },
 
-  footer:        { flexDirection: 'row', alignItems: 'center', paddingHorizontal: 16, paddingBottom: 16 },
-  lockedMsg:     { fontSize: 12, color: P.gray, fontStyle: 'italic' },
-  comingSoonMsg: { fontSize: 12, color: P.gray, fontStyle: 'italic' },
+  footer:       { flexDirection: 'row', alignItems: 'center', paddingHorizontal: 16, paddingVertical: 12, borderTopWidth: 1, borderTopColor: '#1A1A1A' },
+  footerLocked: { fontSize: 11, color: 'rgba(201,168,76,0.4)', fontStyle: 'italic' },
+  footerSoon:   { fontSize: 11, color: P.gray, fontStyle: 'italic' },
 });
 
 // ── Empty State ───────────────────────────────────────────────────────────────
 const EmptyState = () => (
   <LinearGradient colors={[P.black, P.charcoal]} style={{ flex: 1 }}>
     <View style={{ flex: 1, alignItems: 'center', justifyContent: 'center', padding: 48 }}>
-      <Text style={{ fontSize: 48, fontWeight: '100', color: P.gold, letterSpacing: 8, marginBottom: 20 }}>◈</Text>
-      <Text style={{ fontSize: 28, fontWeight: '300', color: P.offWhite, letterSpacing: 2, marginBottom: 12 }}>
-        The District
+      <Text style={{ fontSize: 44, fontWeight: '100', color: P.gold, letterSpacing: 8, marginBottom: 20 }}>◈</Text>
+      <Text style={{ fontSize: 22, fontWeight: '300', color: P.offWhite, letterSpacing: 3, marginBottom: 10 }}>
+        THE DISTRICT
       </Text>
-      <Text style={{ fontSize: 14, color: P.gray, textAlign: 'center', lineHeight: 22 }}>
+      <Text style={{ fontSize: 13, color: P.gray, textAlign: 'center', lineHeight: 22 }}>
         Connect your wallet to find your district.
       </Text>
     </View>
@@ -177,26 +171,39 @@ export default function DistrictScreen() {
 
   if (!isConnected) return <EmptyState />;
 
-  const tier           = valueCalculator.getTierForSOL(balance || 0);
+  const solPrice       = priceDataService.cache.solPrice || 0;
+  const tier           = valueCalculator.getTierForUSD((balance || 0) * solPrice);
   const userLevel      = tier.level;
   const userDistrictId = getUserDistrictId(userLevel);
   const userDistrict   = DISTRICTS.find(d => d.id === userDistrictId);
 
   return (
     <View style={s.root}>
-      {/* Header */}
-      <LinearGradient colors={[P.charcoal, P.dark]} style={s.header}>
-        <Text style={s.headerEye}>YOUR TERRITORY NETWORK</Text>
-        <Text style={s.headerTitle}>The District</Text>
+      {/* ── Header ── */}
+      <LinearGradient colors={[P.charcoal, P.black]} style={s.header}>
         <LinearGradient
-          colors={[P.goldDeep, P.gold, P.goldLight]}
+          colors={['transparent', P.goldDeep, P.gold, P.goldDeep, 'transparent']}
           start={{ x: 0, y: 0 }} end={{ x: 1, y: 0 }}
-          style={s.myBadge}
-        >
-          <Text style={s.myBadgeText}>
-            {userDistrict?.name.toUpperCase()}  ·  LVL {userLevel}
-          </Text>
-        </LinearGradient>
+          style={s.headerRule}
+        />
+        <Text style={s.headerEye}>TERRITORY NETWORK</Text>
+        <Text style={s.headerTitle}>The District</Text>
+        <View style={s.myTierRow}>
+          <LinearGradient
+            colors={[P.goldDeep, P.gold, P.goldLight, P.gold, P.goldDeep]}
+            start={{ x: 0, y: 0 }} end={{ x: 1, y: 0 }}
+            style={s.myTierBadge}
+          >
+            <Text style={s.myTierText}>
+              {userDistrict?.name.toUpperCase()}  ·  LVL {userLevel}
+            </Text>
+          </LinearGradient>
+        </View>
+        <LinearGradient
+          colors={['transparent', P.goldDeep, P.gold, P.goldDeep, 'transparent']}
+          start={{ x: 0, y: 0 }} end={{ x: 1, y: 0 }}
+          style={s.headerRule}
+        />
       </LinearGradient>
 
       <ScrollView
@@ -204,11 +211,11 @@ export default function DistrictScreen() {
         style={s.scroll}
         contentContainerStyle={s.scrollContent}
       >
-        {/* Concept notice */}
+        {/* Coming soon notice */}
         <View style={s.notice}>
-          <Text style={s.noticeText}>
-            Community features — posts, photos, and chat — are coming in a future update.
-            Your district is determined by your SOL level.
+          <Text style={s.noticeEye}>COMING SOON</Text>
+          <Text style={s.noticeBody}>
+            Posts, photos, and real-time chat with holders in your district — arriving in a future update.
           </Text>
         </View>
 
@@ -227,23 +234,34 @@ export default function DistrictScreen() {
 }
 
 const s = StyleSheet.create({
-  root:   { flex: 1, backgroundColor: P.black },
+  root: { flex: 1, backgroundColor: P.black },
+
   header: {
-    paddingTop: 56, paddingBottom: 20, paddingHorizontal: 24,
-    alignItems: 'center', borderBottomWidth: 1, borderBottomColor: P.gold,
+    alignItems: 'center',
+    paddingTop: 52,
+    paddingBottom: 20,
+    gap: 8,
   },
-  headerEye:   { fontSize: 9, color: P.gold, letterSpacing: 4, fontWeight: '600', marginBottom: 4 },
-  headerTitle: { fontSize: 26, color: P.offWhite, fontWeight: '300', letterSpacing: 2, marginBottom: 14 },
-  myBadge:     { borderRadius: 8, paddingHorizontal: 18, paddingVertical: 7 },
-  myBadgeText: { fontSize: 11, color: P.black, fontWeight: '800', letterSpacing: 1 },
+  headerRule:  { width: '70%', height: 1 },
+  headerEye:   { fontSize: 9, color: 'rgba(201,168,76,0.5)', letterSpacing: 4, fontWeight: '600' },
+  headerTitle: { fontSize: 24, fontWeight: '300', color: P.offWhite, letterSpacing: 3 },
+
+  myTierRow:   { alignItems: 'center' },
+  myTierBadge: { borderRadius: 8, paddingHorizontal: 18, paddingVertical: 7 },
+  myTierText:  { fontSize: 10, color: P.black, fontWeight: '900', letterSpacing: 1.5 },
 
   scroll:        { flex: 1 },
   scrollContent: { paddingTop: 16, paddingBottom: 20 },
 
   notice: {
     marginHorizontal: 16, marginBottom: 4,
-    padding: 14, backgroundColor: '#0F0F0F',
-    borderRadius: 12, borderWidth: 1, borderColor: P.border,
+    padding: 16,
+    backgroundColor: '#0A0A0A',
+    borderRadius: 14,
+    borderWidth: 1,
+    borderColor: 'rgba(201,168,76,0.15)',
+    alignItems: 'center',
   },
-  noticeText: { fontSize: 12, color: P.gray, lineHeight: 18, textAlign: 'center' },
+  noticeEye:  { fontSize: 8, color: P.gold, letterSpacing: 4, fontWeight: '700', marginBottom: 6 },
+  noticeBody: { fontSize: 12, color: P.gray, lineHeight: 18, textAlign: 'center' },
 });

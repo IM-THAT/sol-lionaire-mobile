@@ -22,7 +22,7 @@ class PriceDataService {
       lastPriceUpdate:  0,
       lastChartUpdate:  0,
     };
-    this.PRICE_CACHE     = 30_000;       // 30 seconds
+    this.PRICE_CACHE     = 60_000;       // 1 minute — matches 60s auto-refresh interval
     this.SPARKLINE_CACHE = 5 * 60_000;   // 5 minutes (chart data is slower-moving)
   }
 

@@ -11,8 +11,8 @@
 import React, { useState, useEffect, useRef, useCallback } from 'react';
 import {
   View, Text, ScrollView, StyleSheet,
-  TouchableOpacity, StatusBar, Animated, Modal, Image,
-  Dimensions, PanResponder,
+  TouchableOpacity, StatusBar, Animated, Image,
+  Dimensions, PanResponder, Easing,
 } from 'react-native';
 import { LinearGradient } from 'expo-linear-gradient';
 import Svg, { Polyline } from 'react-native-svg';
@@ -25,51 +25,136 @@ import { valueCalculator, CityType } from '../services/valueCalculator';
 import { priceDataService } from '../services/pythPriceService';
 import CalculatingAnimation from '../components/CalculatingAnimation';
 import { useLustre } from '../hooks/useLustre';
+import { P } from '../constants/theme';
+import { PROPERTY_IMAGES } from '../constants/images';
+import { FloatingBadge, DefaultBadge } from '../components/BadgeComponents';
+import { BuffFlash, SparkParticles, LustreGauge } from '../components/LustreComponents';
+import WalletPickerModal from '../components/WalletPickerModal';
 
-const { width: SCREEN_W } = Dimensions.get('window');
-
-const P = {
-  black:    '#000000',
-  charcoal: '#0A0A0A',
-  dark:     '#141414',
-  mid:      '#1C1C1C',
-  border:   '#2A2A2A',
-  gray:     '#888888',
-  offWhite: '#F5F0E8',
-  gold:     '#C9A84C',
-  goldLight:'#E8C96A',
-  goldDeep: '#A07830',
-  goldGlow: 'rgba(201,168,76,0.35)',
-};
-
-// Property images — NYC (ny_) and Dubai (db_)
-const PROPERTY_IMAGES = {
-  ny_level1:  require('../../assets/images/properties/ny_level1.png'),
-  ny_level2:  require('../../assets/images/properties/ny_level2.png'),
-  ny_level3:  require('../../assets/images/properties/ny_level3.png'),
-  ny_level4:  require('../../assets/images/properties/ny_level4.png'),
-  ny_level5:  require('../../assets/images/properties/ny_level5.png'),
-  ny_level6:  require('../../assets/images/properties/ny_level6.png'),
-  ny_level7:  require('../../assets/images/properties/ny_level7.png'),
-  ny_level8:  require('../../assets/images/properties/ny_level8.png'),
-  ny_level9:  require('../../assets/images/properties/ny_level9.png'),
-  ny_level10: require('../../assets/images/properties/ny_level10.png'),
-  db_level1:  require('../../assets/images/properties/db_level1.png'),
-  db_level2:  require('../../assets/images/properties/db_level2.png'),
-  db_level3:  require('../../assets/images/properties/db_level3.png'),
-  db_level4:  require('../../assets/images/properties/db_level4.png'),
-  db_level5:  require('../../assets/images/properties/db_level5.png'),
-  db_level6:  require('../../assets/images/properties/db_level6.png'),
-  db_level7:  require('../../assets/images/properties/db_level7.png'),
-  db_level8:  require('../../assets/images/properties/db_level8.png'),
-  db_level9:  require('../../assets/images/properties/db_level9.png'),
-  db_level10: require('../../assets/images/properties/db_level10.png'),
-};
+const { width: SCREEN_W, height: SCREEN_H } = Dimensions.get('window');
 
 const CITIES = [
-  { key: CityType.MANHATTAN, label: '🗽 NYC' },
-  { key: CityType.DUBAI,     label: '🏙️ Dubai' },
+  { key: CityType.MANHATTAN, label: '🗽 NEW YORK' },
+  { key: CityType.DUBAI,     label: '🏙️ DUBAI' },
 ];
+
+// ── Swipe narrative pool — random quote picked on each buff ───────────────────
+const SWIPE_QUOTES = [
+  'The market rewards the bold.',
+  'Wealth is direction, not just balance.',
+  'Your assets speak louder than words.',
+  'Every SOL compounds your legacy.',
+  'Power is patient. So is your portfolio.',
+  'The skyline bends toward those who hold.',
+  'Old money slept here. You own it now.',
+  'This is not a number. It is a statement.',
+  'Rare air. Rare holdings.',
+  'Sovereignty is measured in real assets.',
+  'The empire you build outlasts the noise.',
+  'Kings don\'t check prices. They set them.',
+  'Fortune favors the long-term holder.',
+  'Prestige is not purchased. It is accumulated.',
+];
+
+// ── Ambient background particles — faint gold dots drifting upward ────────────
+const PARTICLE_DATA = [
+  { x: 0.08, size: 3,   duration: 7200,  delay: 0    },
+  { x: 0.21, size: 2,   duration: 9400,  delay: 1800 },
+  { x: 0.37, size: 4,   duration: 8100,  delay: 600  },
+  { x: 0.55, size: 2.5, duration: 10200, delay: 3100 },
+  { x: 0.68, size: 3,   duration: 7800,  delay: 4400 },
+  { x: 0.80, size: 2,   duration: 9000,  delay: 2200 },
+  { x: 0.90, size: 3.5, duration: 8600,  delay: 800  },
+  { x: 0.14, size: 2,   duration: 11000, delay: 5500 },
+];
+
+const AmbientParticles = () => {
+  const anims = useRef(PARTICLE_DATA.map(() => new Animated.Value(0))).current;
+
+  useEffect(() => {
+    PARTICLE_DATA.forEach((p, i) => {
+      const loop = () => {
+        anims[i].setValue(0);
+        Animated.sequence([
+          Animated.delay(p.delay),
+          Animated.timing(anims[i], {
+            toValue: 1,
+            duration: p.duration,
+            easing: Easing.linear,
+            useNativeDriver: true,
+          }),
+        ]).start(({ finished }) => { if (finished) loop(); });
+      };
+      loop();
+    });
+  }, []);
+
+  return (
+    <View pointerEvents="none" style={StyleSheet.absoluteFillObject}>
+      {PARTICLE_DATA.map((p, i) => (
+        <Animated.View
+          key={i}
+          style={{
+            position: 'absolute',
+            left: p.x * SCREEN_W,
+            width: p.size,
+            height: p.size,
+            borderRadius: p.size / 2,
+            backgroundColor: '#C9A84C',
+            opacity: anims[i].interpolate({
+              inputRange:  [0, 0.1, 0.75, 1],
+              outputRange: [0, 0.35, 0.18, 0],
+            }),
+            transform: [{
+              translateY: anims[i].interpolate({
+                inputRange:  [0, 1],
+                outputRange: [SCREEN_H * 0.85, SCREEN_H * 0.05],
+              }),
+            }],
+          }}
+        />
+      ))}
+    </View>
+  );
+};
+
+// ── Animated SWIPE gesture hint — appears below badge, slides left↔right ─────
+const SwipeHint = ({ visible }) => {
+  const slideX = useRef(new Animated.Value(0)).current;
+  const leftOp  = useRef(new Animated.Value(1)).current;
+  const rightOp = useRef(new Animated.Value(0.3)).current;
+
+  useEffect(() => {
+    if (!visible) return;
+    const anim = Animated.loop(
+      Animated.sequence([
+        Animated.parallel([
+          Animated.timing(slideX,  { toValue: 14,  duration: 700, useNativeDriver: true }),
+          Animated.timing(leftOp,  { toValue: 0.3, duration: 700, useNativeDriver: true }),
+          Animated.timing(rightOp, { toValue: 1,   duration: 700, useNativeDriver: true }),
+        ]),
+        Animated.parallel([
+          Animated.timing(slideX,  { toValue: -14, duration: 700, useNativeDriver: true }),
+          Animated.timing(leftOp,  { toValue: 1,   duration: 700, useNativeDriver: true }),
+          Animated.timing(rightOp, { toValue: 0.3, duration: 700, useNativeDriver: true }),
+        ]),
+      ])
+    );
+    anim.start();
+    return () => anim.stop();
+  }, [visible]);
+
+  if (!visible) return null;
+  return (
+    <View style={{ alignItems: 'center', marginTop: 2, marginBottom: 6 }}>
+      <Animated.View style={{ flexDirection: 'row', alignItems: 'center', gap: 10, transform: [{ translateX: slideX }] }}>
+        <Animated.Text style={{ color: P.gold, fontSize: 22, fontWeight: '300', opacity: leftOp }}>‹</Animated.Text>
+        <Text style={{ color: P.gold, fontSize: 18, fontWeight: '800', letterSpacing: 6 }}>SWIPE</Text>
+        <Animated.Text style={{ color: P.gold, fontSize: 22, fontWeight: '300', opacity: rightOp }}>›</Animated.Text>
+      </Animated.View>
+    </View>
+  );
+};
 
 // ── Gold bar surface sweep — "this button is a gold bar, tap it" ──────────────
 // Wide triple-highlight sweeps horizontally every ~4s to simulate
@@ -128,256 +213,6 @@ const PriceSpark = ({ prices, positive }) => {
   );
 };
 
-// ── Lustre: gold flash when badge is buffed ───────────────────────────────────
-const BuffFlash = ({ visible }) => {
-  const flash = useRef(new Animated.Value(0)).current;
-  useEffect(() => {
-    if (!visible) return;
-    flash.setValue(1);
-    Animated.timing(flash, { toValue: 0, duration: 700, useNativeDriver: true }).start();
-  }, [visible]);
-  return (
-    <Animated.View
-      pointerEvents="none"
-      style={{
-        position: 'absolute', top: 0, left: 0, right: 0, bottom: 0,
-        borderRadius: 12,
-        backgroundColor: 'rgba(255,215,0,0.45)',
-        opacity: flash,
-      }}
-    />
-  );
-};
-
-// ── Lustre: 6 gold sparks fly outward on buff ─────────────────────────────────
-const SPARK_ANGLES = [0, 60, 120, 180, 240, 300];
-const SparkParticles = ({ trigger }) => {
-  const anims = useRef(
-    Array.from({ length: 6 }, () => ({
-      x:  new Animated.Value(0),
-      y:  new Animated.Value(0),
-      op: new Animated.Value(0),
-    }))
-  ).current;
-
-  useEffect(() => {
-    if (!trigger) return;
-    anims.forEach(a => { a.x.setValue(0); a.y.setValue(0); a.op.setValue(0); });
-    Animated.parallel(
-      anims.map((a, i) => {
-        const rad  = (SPARK_ANGLES[i] * Math.PI) / 180;
-        const dist = 58;
-        return Animated.parallel([
-          Animated.timing(a.x,  { toValue: Math.cos(rad) * dist, duration: 520, useNativeDriver: true }),
-          Animated.timing(a.y,  { toValue: Math.sin(rad) * dist, duration: 520, useNativeDriver: true }),
-          Animated.sequence([
-            Animated.timing(a.op, { toValue: 1, duration: 80,  useNativeDriver: true }),
-            Animated.timing(a.op, { toValue: 0, duration: 440, useNativeDriver: true }),
-          ]),
-        ]);
-      })
-    ).start();
-  }, [trigger]);
-
-  return (
-    <View pointerEvents="none" style={{ position: 'absolute', alignSelf: 'center', top: '40%' }}>
-      {anims.map((a, i) => (
-        <Animated.View
-          key={i}
-          style={{
-            position: 'absolute',
-            width: 7, height: 7, borderRadius: 4,
-            backgroundColor: i % 2 === 0 ? '#FFD700' : '#FFFACD',
-            marginLeft: -3.5, marginTop: -3.5,
-            opacity: a.op,
-            transform: [{ translateX: a.x }, { translateY: a.y }],
-          }}
-        />
-      ))}
-    </View>
-  );
-};
-
-// ── Lustre: gauge bar + streak indicator shown below badge ────────────────────
-const LustreGauge = ({ lustre, streak, isMidasTouch }) => {
-  const barColor = isMidasTouch ? ['#B8860B', '#FFD700', '#FFFACD']
-    : lustre > 60 ? [P.goldDeep, P.gold, P.goldLight]
-    : lustre > 25 ? ['#6B5B1A', '#A07830', '#C9A84C']
-    :               ['#3A3A3A', '#555',    '#777'];
-
-  return (
-    <View style={lg.wrap}>
-      {/* Bar */}
-      <View style={lg.barBg}>
-        <LinearGradient
-          colors={barColor}
-          start={{ x: 0, y: 0 }} end={{ x: 1, y: 0 }}
-          style={[lg.barFill, { width: `${lustre}%` }]}
-        />
-      </View>
-      {/* Labels row */}
-      <View style={lg.row}>
-        <Text style={lg.label}>LUSTRE</Text>
-        <Text style={[lg.pct, {
-          color: isMidasTouch ? '#FFD700' : lustre > 60 ? P.goldLight : lustre > 25 ? P.gold : '#666',
-        }]}>{lustre}%</Text>
-        {streak > 0 && !isMidasTouch && (
-          <Text style={lg.streak}>🔥 {streak}d</Text>
-        )}
-        {isMidasTouch && (
-          <Text style={lg.midas}>✨ MIDAS</Text>
-        )}
-      </View>
-      {/* Hint when fading */}
-      {lustre < 35 && (
-        <Text style={lg.hint}>← 스와이프하여 광택 복구 →</Text>
-      )}
-    </View>
-  );
-};
-
-// ── Wallet Picker Modal ───────────────────────────────────────────────────────
-const WalletPickerModal = ({ visible, onSelect, onClose }) => {
-  const fadeAnim = useRef(new Animated.Value(0)).current;
-
-  useEffect(() => {
-    if (visible) {
-      Animated.timing(fadeAnim, { toValue: 1, duration: 200, useNativeDriver: true }).start();
-    } else {
-      fadeAnim.setValue(0);
-    }
-  }, [visible]);
-
-  return (
-    <Modal visible={visible} transparent animationType="none" onRequestClose={onClose}>
-      <Animated.View style={[wm.overlay, { opacity: fadeAnim }]}>
-        <TouchableOpacity style={{ flex: 1 }} onPress={onClose} activeOpacity={1} />
-        <View style={wm.sheet}>
-          <View style={wm.handle} />
-          <Text style={wm.title}>Connect Wallet</Text>
-          <Text style={wm.sub}>Select your Solana wallet</Text>
-          <TouchableOpacity style={wm.btn} onPress={() => onSelect('seedvault')} activeOpacity={0.7}>
-            <Text style={wm.emoji}>🔐</Text>
-            <View style={{ flex: 1 }}>
-              <Text style={wm.btnLabel}>Seed Vault</Text>
-              <Text style={wm.btnSub}>Seeker built-in secure wallet</Text>
-            </View>
-            <Text style={wm.arrow}>›</Text>
-          </TouchableOpacity>
-          <TouchableOpacity style={wm.cancelBtn} onPress={onClose}>
-            <Text style={wm.cancelText}>Cancel</Text>
-          </TouchableOpacity>
-        </View>
-      </Animated.View>
-    </Modal>
-  );
-};
-
-// ── Floating Badge ────────────────────────────────────────────────────────────
-// nextImageKey: faint silhouette of the next level shown behind the current frame
-// level: scales glow intensity (1 = subtle, 10 = blazing)
-const FloatingBadge = ({ imageKey, nextImageKey, tierColor, level, isMidasTouch }) => {
-  const floatAnim = useRef(new Animated.Value(0)).current;
-  const glowAnim  = useRef(new Animated.Value(0.6)).current;
-
-  // Glow scales with level: opacity max 0.55 (lv1) → 1.0 (lv10)
-  //                          shadowRadius    16   →  44
-  const glowMax    = Math.min(0.5 + (level || 1) * 0.05, 1.0);
-  const glowRadius = Math.min(16 + (level || 1) * 3, 46);
-
-  useEffect(() => {
-    Animated.loop(
-      Animated.sequence([
-        Animated.timing(floatAnim, { toValue: -12, duration: 2200, useNativeDriver: true }),
-        Animated.timing(floatAnim, { toValue: 0,   duration: 2200, useNativeDriver: true }),
-      ])
-    ).start();
-
-    Animated.loop(
-      Animated.sequence([
-        Animated.timing(glowAnim, { toValue: glowMax,       duration: 1800, useNativeDriver: true }),
-        Animated.timing(glowAnim, { toValue: glowMax * 0.5, duration: 1800, useNativeDriver: true }),
-      ])
-    ).start();
-  }, []);
-
-  const imageSource     = PROPERTY_IMAGES[imageKey] ?? PROPERTY_IMAGES['ny_level1'];
-  const nextImageSource = nextImageKey ? PROPERTY_IMAGES[nextImageKey] : null;
-
-  return (
-    <Animated.View style={[s.badgeWrap, { transform: [{ translateY: floatAnim }] }]}>
-      {/* Outer glow — intensity and radius scale with tier level */}
-      <Animated.View style={[
-        s.badgeGlow,
-        { opacity: glowAnim, borderColor: tierColor || P.gold, shadowRadius: glowRadius },
-      ]} />
-      {/* Midas Touch extra aura — 7-day streak reward */}
-      {isMidasTouch && (
-        <Animated.View style={[s.midasAura, { opacity: glowAnim }]} />
-      )}
-      {/* Next-level silhouette — faint ghost of the next property */}
-      {nextImageSource && (
-        <Image
-          source={nextImageSource}
-          style={s.nextSilhouette}
-          resizeMode="cover"
-          blurRadius={6}
-        />
-      )}
-      {/* Gold pixel border frame */}
-      <LinearGradient
-        colors={[P.goldDeep, P.gold, P.goldLight, P.gold, P.goldDeep]}
-        start={{ x: 0, y: 0 }}
-        end={{ x: 1, y: 1 }}
-        style={s.badgeFrame}
-      >
-        <View style={s.badgeInner}>
-          <Image source={imageSource} style={s.badgeImage} resizeMode="cover" />
-          {/* Pixel art scanlines overlay */}
-          <View style={s.scanlines} />
-        </View>
-      </LinearGradient>
-      {/* Level pill */}
-      <View style={[s.levelPill, { borderColor: tierColor || P.gold }]}>
-        <Text style={[s.levelPillText, { color: tierColor || P.gold }]}>LEVEL {level || '?'}</Text>
-      </View>
-    </Animated.View>
-  );
-};
-
-// ── Default (not connected) Badge ─────────────────────────────────────────────
-const DefaultBadge = () => {
-  const pulseAnim = useRef(new Animated.Value(0.4)).current;
-
-  useEffect(() => {
-    Animated.loop(
-      Animated.sequence([
-        Animated.timing(pulseAnim, { toValue: 1,   duration: 1500, useNativeDriver: true }),
-        Animated.timing(pulseAnim, { toValue: 0.4, duration: 1500, useNativeDriver: true }),
-      ])
-    ).start();
-  }, []);
-
-  return (
-    <View style={s.badgeWrap}>
-      <Animated.View style={[s.badgeGlow, { opacity: pulseAnim, borderColor: P.gold }]} />
-      <LinearGradient
-        colors={[P.goldDeep, P.gold, P.goldLight, P.gold, P.goldDeep]}
-        start={{ x: 0, y: 0 }}
-        end={{ x: 1, y: 1 }}
-        style={s.badgeFrame}
-      >
-        <View style={[s.badgeInner, s.badgeInnerEmpty]}>
-          <Text style={s.badgeQuestion}>?</Text>
-        </View>
-      </LinearGradient>
-      <View style={s.levelPill}>
-        <Text style={s.levelPillText}>LEVEL ?</Text>
-      </View>
-    </View>
-  );
-};
-
 // ── Main Screen ───────────────────────────────────────────────────────────────
 export default function HomeScreen() {
   const {
@@ -389,6 +224,7 @@ export default function HomeScreen() {
   const [selectedCity,   setSelectedCity]   = useState(CityType.MANHATTAN);
   const [showFlash,      setShowFlash]      = useState(false);
   const [buffCount,      setBuffCount]      = useState(0);    // triggers SparkParticles
+  const [flashText,      setFlashText]      = useState('');   // random quote per swipe
   const [solPrice,       setSolPrice]       = useState(0);
   const [priceChange24h, setPriceChange24h] = useState(null);
   const [solSparkline,   setSolSparkline]   = useState([]);
@@ -400,10 +236,20 @@ export default function HomeScreen() {
   const { lustre, streak, isMidasTouch, buff } = useLustre(walletAddress);
 
   // buffRef: stable reference so PanResponder (created once) always calls latest buff
-  const buffRef = useRef(buff);
+  const buffRef        = useRef(buff);
+  const lastQuoteRef   = useRef(-1);
   useEffect(() => { buffRef.current = buff; }, [buff]);
 
-  // PanResponder: horizontal swipe on badge → buff
+  // Pick a random swipe quote, never repeating the same one twice in a row
+  const pickQuote = () => {
+    let idx;
+    do { idx = Math.floor(Math.random() * SWIPE_QUOTES.length); }
+    while (idx === lastQuoteRef.current && SWIPE_QUOTES.length > 1);
+    lastQuoteRef.current = idx;
+    return SWIPE_QUOTES[idx];
+  };
+
+  // PanResponder: horizontal swipe on badge → buff + money explosion + random quote
   const lustrePan = useRef(
     PanResponder.create({
       onStartShouldSetPanResponder:       () => false,
@@ -412,6 +258,7 @@ export default function HomeScreen() {
       onPanResponderRelease: (_, { dx }) => {
         if (Math.abs(dx) > 35) {
           buffRef.current();
+          setFlashText(pickQuote());
           setShowFlash(true);
           setBuffCount(c => c + 1);
           setTimeout(() => setShowFlash(false), 750);
@@ -423,60 +270,94 @@ export default function HomeScreen() {
   // City transition fade — fades hero+balance out then back in on city switch
   const cityFade = useRef(new Animated.Value(1)).current;
 
+  // Race-condition guard: only the most recent calculate call may commit state.
+  const calcRequestRef = useRef(0);
+
+  // 10% tier buffer: remembers last displayed level per city to prevent yo-yo
+  const prevTierLevelRef = useRef({ MANHATTAN: null, DUBAI: null });
 
   // Clear result immediately when wallet disconnects (also handles async race)
   useEffect(() => {
-    if (!isConnected) setMappingResult(null);
+    if (!isConnected) {
+      setMappingResult(null);
+      prevTierLevelRef.current = { MANHATTAN: null, DUBAI: null };
+    }
   }, [isConnected]);
 
-  // Auto-calculate on connect or city change
+  // Auto-calculate on connect, balance change, or city change.
+  // This also fetches and sets price data, so a separate loadPrices effect is not needed.
   useEffect(() => {
     if (isConnected && balance !== null) {
       handleCalculate();
     }
   }, [isConnected, balance, selectedCity]);
 
+  // Silent 60s price refresh — no loading indicator, no animation delay
   useEffect(() => {
-    loadPrices();
-  }, [selectedCity]);
+    if (!isConnected || balance === null) return;
+    const id = setInterval(async () => {
+      try {
+        const prices = await priceDataService.fetchAllPrices(selectedCity);
+        const price  = prices.solPrice || 0;
+        setSolPrice(price);
+        setPriceChange24h(prices.priceChange24h ?? null);
+        setSolSparkline(prices.solSparkline || []);
 
-  const loadPrices = async () => {
-    try {
-      const prices = await priceDataService.fetchAllPrices(selectedCity);
-      setSolPrice(prices.solPrice || 0);
-      setPriceChange24h(prices.priceChange24h ?? null);
-      setSolSparkline(prices.solSparkline || []);
-    } catch (e) {
-      console.error('Price load failed:', e);
-    }
-  };
+        const totalUSD     = (balance || 0) * price;
+        const bufferedTier = valueCalculator.getTierForUSDBuffered(
+          totalUSD, prevTierLevelRef.current[selectedCity]
+        );
+        prevTierLevelRef.current[selectedCity] = bufferedTier.level;
 
-  const handleWalletSelect = async (walletId) => {
-    setShowPicker(false);
-    await connectWallet(walletId);
-  };
+        const result = valueCalculator.determineMapping({
+          solAmount:     balance || 0,
+          solPrice:      price,
+          cityType:      selectedCity,
+          _tierOverride: bufferedTier,
+        });
+        setMappingResult(result);
+      } catch { /* silent — stale display fine until next tick */ }
+    }, 60_000);
+    return () => clearInterval(id);
+  }, [isConnected, balance, selectedCity]);
 
   const handleCalculate = async () => {
     if (!isConnected) { setShowPicker(true); return; }
+
+    const thisRequest = ++calcRequestRef.current;
     setIsCalculating(true);
     try {
-      // Single fetch — result reused for both state update and calculation
       const prices = await priceDataService.fetchAllPrices(selectedCity);
+      if (thisRequest !== calcRequestRef.current) return; // stale — a newer call is running
+
       setSolPrice(prices.solPrice || 0);
       setPriceChange24h(prices.priceChange24h ?? null);
       setSolSparkline(prices.solSparkline || []);
+
+      const totalUSD     = (balance || 0) * (prices.solPrice || 0);
+      const bufferedTier = valueCalculator.getTierForUSDBuffered(
+        totalUSD,
+        prevTierLevelRef.current[selectedCity]
+      );
+      prevTierLevelRef.current[selectedCity] = bufferedTier.level;
+
       const result = valueCalculator.determineMapping({
-        solAmount: balance || 0,
-        solPrice:  prices.solPrice || 0,
-        cityType:  selectedCity,
+        solAmount:    balance || 0,
+        solPrice:     prices.solPrice || 0,
+        cityType:     selectedCity,
+        _tierOverride: bufferedTier,
       });
+
       await new Promise(r => setTimeout(r, 800));
+      if (thisRequest !== calcRequestRef.current) return;
+
       setMappingResult(result);
       saveToHistory(result);
     } catch (e) {
+      if (thisRequest !== calcRequestRef.current) return;
       console.error('Calculate failed:', e);
     } finally {
-      setIsCalculating(false);
+      if (thisRequest === calcRequestRef.current) setIsCalculating(false);
     }
   };
 
@@ -489,6 +370,11 @@ export default function HomeScreen() {
     });
   }, [selectedCity, cityFade]);
 
+  const handleWalletSelect = async (walletId) => {
+    setShowPicker(false);
+    await connectWallet(walletId);
+  };
+
   const saveToHistory = async (result) => {
     try {
       const key = `history_${walletAddress}`;
@@ -496,7 +382,7 @@ export default function HomeScreen() {
       const history  = existing ? JSON.parse(existing) : [];
       history.unshift({ ...result, timestamp: new Date().toISOString() });
       await AsyncStorage.setItem(key, JSON.stringify(history.slice(0, 50)));
-    } catch (e) { /* silent */ }
+    } catch (e) { /* history is non-critical, silent fail is acceptable */ }
   };
 
   const handleShare = async () => {
@@ -505,7 +391,6 @@ export default function HomeScreen() {
     try {
       // quality 0.9: ~30% faster than 1.0, visually indistinguishable at share sizes
       const uri = await captureRef(shareCardRef, { format: 'png', quality: 0.9 });
-      // 2. Share via expo-sharing (works on both iOS & Android)
       const canShare = await Sharing.isAvailableAsync();
       if (canShare) {
         await Sharing.shareAsync(uri, {
@@ -552,6 +437,7 @@ export default function HomeScreen() {
   return (
     <View style={s.root}>
       <StatusBar barStyle="light-content" />
+      <AmbientParticles />
 
       <ScrollView
         style={s.scroll}
@@ -559,18 +445,19 @@ export default function HomeScreen() {
         showsVerticalScrollIndicator={false}
       >
         {/* ─── Logo ─────────────────────────────────────────────────────────── */}
-        <LinearGradient
-          colors={[P.charcoal, P.black]}
-          style={s.logoArea}
-        >
+        <LinearGradient colors={[P.charcoal, P.black]} style={s.logoArea}>
           <LinearGradient
-            colors={[P.goldDeep, P.gold, P.goldLight]}
+            colors={['transparent', P.goldDeep, P.gold, P.goldDeep, 'transparent']}
             start={{ x: 0, y: 0 }} end={{ x: 1, y: 0 }}
-            style={s.logoGrad}
-          >
-            <Text style={s.logoText}>SOL LIONAIRE</Text>
-          </LinearGradient>
-          <Text style={s.logoSub}>Luxury Status Layer · Solana</Text>
+            style={s.logoRule}
+          />
+          <Text style={s.logoText}>SOLIONAIRE</Text>
+          <Text style={s.logoSub}>LUXURY STATUS LAYER  ·  SOLANA</Text>
+          <LinearGradient
+            colors={['transparent', P.goldDeep, P.gold, P.goldDeep, 'transparent']}
+            start={{ x: 0, y: 0 }} end={{ x: 1, y: 0 }}
+            style={s.logoRule}
+          />
         </LinearGradient>
 
         {/* ─── Hero Badge + Balance — wrapped for city-switch fade ──────────── */}
@@ -586,6 +473,8 @@ export default function HomeScreen() {
                   tierColor={tier?.color}
                   level={levelNum}
                   isMidasTouch={isMidasTouch}
+                  flashText={flashText}
+                  flashVisible={showFlash}
                 />
                 <BuffFlash visible={showFlash} />
                 <SparkParticles trigger={buffCount} />
@@ -593,6 +482,9 @@ export default function HomeScreen() {
             ) : (
               <DefaultBadge />
             )}
+
+            {/* SWIPE gesture hint — visible when connected */}
+            <SwipeHint visible={isConnected && !!mappingResult} />
 
             {/* Lustre gauge — only shown when connected */}
             {isConnected && mappingResult && (
@@ -610,12 +502,6 @@ export default function HomeScreen() {
               </LinearGradient>
             )}
 
-            {/* Percentile badge — hide for Newcomer */}
-            {isConnected && mappingResult?.percentile && mappingResult.percentile !== 'Newcomer' && (
-              <View style={s.percentileBadge}>
-                <Text style={s.percentileText}>{mappingResult.percentile} of SOL Holders</Text>
-              </View>
-            )}
           </View>
 
           {/* Balance Display (only when connected) */}
@@ -624,17 +510,21 @@ export default function HomeScreen() {
               colors={['rgba(201,168,76,0.08)', 'rgba(0,0,0,0)']}
               style={s.balanceGradient}
             >
-              <Text style={s.balanceSOL}>
-                {solBalance.toFixed(4)} <Text style={s.balanceSOLUnit}>SOL</Text>
-              </Text>
-              <Text style={s.balanceUSD}>
-                {solPrice > 0
-                  ? `≈ $${totalUSD.toLocaleString(undefined, { maximumFractionDigits: 0 })}`
-                  : '≈ ---'}
-              </Text>
-              {/* Wealth Pulse — 24h change % + sparkline */}
+              {/* Primary row: USD + SOL side by side */}
+              <View style={s.balancePrimaryRow}>
+                <Text style={s.balanceUSD}>
+                  ${solPrice > 0
+                    ? totalUSD.toLocaleString(undefined, { maximumFractionDigits: 0 })
+                    : '---'}
+                  <Text style={s.balanceUSDunit}> USD</Text>
+                </Text>
+                <Text style={s.balanceSubDot}>  ·  </Text>
+                <Text style={s.balanceSOL}>≈ {solBalance.toFixed(4)} SOL</Text>
+              </View>
+
+              {/* Secondary row: 24h change + sparkline */}
               {priceChange24h !== null && (
-                <View style={s.wealthPulse}>
+                <View style={s.balanceSubRow}>
                   <Text style={[
                     s.wealthChange,
                     { color: priceChange24h >= 0 ? '#4DB36A' : '#E05555' },
@@ -644,6 +534,14 @@ export default function HomeScreen() {
                   <PriceSpark prices={solSparkline} positive={priceChange24h >= 0} />
                 </View>
               )}
+
+              {/* Percentile — prominent, inside card */}
+              {mappingResult?.percentile && mappingResult.percentile !== 'Newcomer' && (
+                <View style={s.percentileRow}>
+                  <Text style={s.percentileLabel}>🏆 {mappingResult.percentile} of SOL Holders</Text>
+                </View>
+              )}
+
               {/* Wallet tag */}
               <View style={s.walletTag}>
                 <Text style={s.walletTagText}>
@@ -656,16 +554,24 @@ export default function HomeScreen() {
         </Animated.View>
 
         {/* ─── City Toggle (only when connected) ───────────────────────────── */}
-        {isConnected && <View style={s.cityToggleRow}>
+        {isConnected && <View style={s.cityTabBar}>
           {CITIES.map(c => (
             <TouchableOpacity
               key={c.key}
-              style={[s.cityBtn, selectedCity === c.key && s.cityBtnActive]}
+              style={s.cityTab}
               onPress={() => handleCityChange(c.key)}
+              activeOpacity={0.75}
             >
-              <Text style={[s.cityBtnText, selectedCity === c.key && s.cityBtnTextActive]}>
+              <Text style={[s.cityTabText, selectedCity === c.key && s.cityTabTextActive]}>
                 {c.label}
               </Text>
+              {selectedCity === c.key && (
+                <LinearGradient
+                  colors={[P.goldDeep, P.gold, P.goldLight, P.gold, P.goldDeep]}
+                  start={{ x: 0, y: 0 }} end={{ x: 1, y: 0 }}
+                  style={s.cityTabIndicator}
+                />
+              )}
             </TouchableOpacity>
           ))}
         </View>}
@@ -748,7 +654,7 @@ export default function HomeScreen() {
 
           {/* Header row: logo + level pill */}
           <View style={sc.header}>
-            <Text style={sc.logo}>SOL LIONAIRE</Text>
+            <Text style={sc.logo}>SOLIONAIRE</Text>
             <View style={[sc.levelPill, { borderColor: tier?.color ?? P.gold }]}>
               <Text style={[sc.levelPillText, { color: tier?.color ?? P.gold }]}>
                 LEVEL {levelNum}
@@ -802,100 +708,19 @@ export default function HomeScreen() {
 }
 
 // ── Styles ────────────────────────────────────────────────────────────────────
-const BADGE_SIZE = Math.min(SCREEN_W * 0.62, 260);
-
 const s = StyleSheet.create({
   root:    { flex: 1, backgroundColor: P.black },
   scroll:  { flex: 1 },
   scrollContent: { paddingBottom: 20 },
 
-  // Logo
-  logoArea: { alignItems: 'center', paddingTop: 56, paddingBottom: 20 },
-  logoGrad: { paddingHorizontal: 24, paddingVertical: 10, borderRadius: 8, marginBottom: 8 },
-  logoText: { fontSize: 28, fontWeight: '900', letterSpacing: 6, color: P.black },
-  logoSub:  { fontSize: 11, color: P.gray, letterSpacing: 3 },
+  // Logo — thin rule / clean text treatment (no filled box)
+  logoArea: { alignItems: 'center', paddingTop: 52, paddingBottom: 20, gap: 8 },
+  logoRule: { width: SCREEN_W - 80, height: 1 },
+  logoText: { fontSize: 24, fontWeight: '700', letterSpacing: 5, color: P.gold },
+  logoSub:  { fontSize: 9, color: 'rgba(201,168,76,0.45)', letterSpacing: 3.5 },
 
   // Hero
   heroArea: { alignItems: 'center', paddingVertical: 16, paddingHorizontal: 24 },
-
-  // Floating badge
-  badgeWrap: { alignItems: 'center', marginBottom: 20 },
-  // Ghost silhouette of the next-level property behind the badge
-  nextSilhouette: {
-    position: 'absolute',
-    width: BADGE_SIZE + 28,
-    height: BADGE_SIZE + 28,
-    borderRadius: 16,
-    opacity: 0.18,
-  },
-  // Midas Touch: extra golden ring around badge (7-day streak reward)
-  midasAura: {
-    position: 'absolute',
-    width: BADGE_SIZE + 52,
-    height: BADGE_SIZE + 52,
-    borderRadius: (BADGE_SIZE + 52) / 2,
-    borderWidth: 2.5,
-    borderColor: '#FFD700',
-    top: -26,
-    shadowColor: '#FFD700',
-    shadowOffset: { width: 0, height: 0 },
-    shadowOpacity: 1,
-    shadowRadius: 18,
-  },
-  badgeGlow: {
-    position: 'absolute',
-    width: BADGE_SIZE + 32,
-    height: BADGE_SIZE + 32,
-    borderRadius: (BADGE_SIZE + 32) / 2,
-    borderWidth: 2,
-    borderColor: P.gold,
-    shadowColor: P.gold,
-    shadowOffset: { width: 0, height: 0 },
-    shadowOpacity: 0.9,
-    shadowRadius: 24,
-    elevation: 20,
-    top: -16,
-  },
-  badgeFrame: {
-    width: BADGE_SIZE,
-    height: BADGE_SIZE,
-    borderRadius: 12,
-    padding: 4,
-    shadowColor: P.gold,
-    shadowOffset: { width: 0, height: 0 },
-    shadowOpacity: 0.6,
-    shadowRadius: 16,
-    elevation: 16,
-  },
-  badgeInner: {
-    flex: 1,
-    borderRadius: 10,
-    overflow: 'hidden',
-    backgroundColor: P.dark,
-  },
-  badgeInnerEmpty: {
-    alignItems: 'center',
-    justifyContent: 'center',
-  },
-  badgeImage: { width: '100%', height: '100%' },
-  badgeQuestion: { fontSize: 72, color: P.border },
-  scanlines: {
-    position: 'absolute',
-    top: 0, left: 0, right: 0, bottom: 0,
-    backgroundColor: 'rgba(0,0,0,0.15)',
-  },
-
-  levelPill: {
-    position: 'absolute',
-    bottom: -12,
-    backgroundColor: P.black,
-    borderWidth: 1,
-    borderColor: P.gold,
-    borderRadius: 20,
-    paddingHorizontal: 14,
-    paddingVertical: 4,
-  },
-  levelPillText: { fontSize: 10, fontWeight: '800', color: P.gold, letterSpacing: 3 },
 
   // Identity label
   identityGrad: {
@@ -937,25 +762,40 @@ const s = StyleSheet.create({
     paddingVertical: 28,
     paddingHorizontal: 24,
   },
-  balanceSOL: {
-    fontSize: 52,
-    fontWeight: '900',
-    color: P.gold,
-    letterSpacing: -1,
-  },
-  balanceSOLUnit: { fontSize: 28, fontWeight: '400', color: P.goldLight },
-  balanceUSD: { fontSize: 14, color: P.gray, marginTop: 4 },
-  balanceEmpty: { fontSize: 52, fontWeight: '900', color: P.border, letterSpacing: -1 },
-
-  // Wealth Pulse row — 24h change + sparkline
-  wealthPulse: {
+  // Primary row: USD + SOL on same line
+  balancePrimaryRow: {
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'center',
-    gap: 10,
-    marginTop: 8,
+    flexWrap: 'wrap',
+    gap: 4,
   },
+  balanceUSD:     { fontSize: 36, fontWeight: '900', color: P.gold, letterSpacing: -0.5 },
+  balanceUSDunit: { fontSize: 18, fontWeight: '300', color: P.goldLight },
+  // Secondary SOL amount
+  balanceSOL:     { fontSize: 13, color: P.gray },
+  // Row: 24h change + sparkline
+  balanceSubRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    flexWrap: 'wrap',
+    gap: 4,
+    marginTop: 6,
+  },
+  balanceSubDot: { fontSize: 13, color: P.border },
   wealthChange: { fontSize: 12, fontWeight: '600', letterSpacing: 0.3 },
+
+  // Percentile row — prominent inside balance card
+  percentileRow: {
+    marginTop: 16,
+    paddingTop: 14,
+    borderTopWidth: 1,
+    borderTopColor: 'rgba(201,168,76,0.2)',
+    width: '100%',
+    alignItems: 'center',
+  },
+  percentileLabel: { fontSize: 14, color: P.gold, fontWeight: '700', letterSpacing: 0.5 },
 
   walletTag: {
     marginTop: 14,
@@ -966,26 +806,39 @@ const s = StyleSheet.create({
   },
   walletTagText: { fontSize: 11, color: P.gray, fontFamily: 'monospace' },
 
-  // City toggle
-  cityToggleRow: {
+  // City tab bar — underline indicator style
+  cityTabBar: {
     flexDirection: 'row',
-    marginHorizontal: 20,
+    marginHorizontal: 24,
     marginBottom: 20,
-    backgroundColor: P.dark,
-    borderRadius: 12,
-    padding: 3,
-    borderWidth: 1,
-    borderColor: P.border,
+    borderBottomWidth: 1,
+    borderBottomColor: P.border,
   },
-  cityBtn: {
+  cityTab: {
     flex: 1,
-    paddingVertical: 10,
-    borderRadius: 10,
+    paddingVertical: 11,
+    paddingBottom: 13,
     alignItems: 'center',
+    position: 'relative',
   },
-  cityBtnActive: { backgroundColor: P.gold },
-  cityBtnText: { fontSize: 13, fontWeight: '600', color: P.gray },
-  cityBtnTextActive: { color: P.black, fontWeight: '800' },
+  cityTabText: {
+    fontSize: 12,
+    fontWeight: '600',
+    color: P.gray,
+    letterSpacing: 1.5,
+  },
+  cityTabTextActive: {
+    color: P.gold,
+    fontWeight: '800',
+  },
+  cityTabIndicator: {
+    position: 'absolute',
+    bottom: 0,
+    left: '15%',
+    right: '15%',
+    height: 2,
+    borderRadius: 1,
+  },
 
   // CTA
   ctaArea: { marginHorizontal: 20, gap: 12 },
@@ -998,8 +851,8 @@ const s = StyleSheet.create({
     shadowRadius: 22,
     elevation: 14,
   },
-  shareBtn:   { borderRadius: 14, overflow: 'hidden' },
-  connectBtn: { borderRadius: 14, overflow: 'hidden' },
+  shareBtn:     { borderRadius: 14, overflow: 'hidden' },
+  connectBtn:   { borderRadius: 14, overflow: 'hidden' },
   shareBtnGrad: { paddingVertical: 18, alignItems: 'center' },
   shareBtnText: { fontSize: 17, fontWeight: '800', color: P.black, letterSpacing: 1 },
 
@@ -1030,63 +883,6 @@ const s = StyleSheet.create({
   },
 });
 
-// ── Lustre Gauge Styles ───────────────────────────────────────────────────────
-const lg = StyleSheet.create({
-  wrap:   { alignItems: 'center', marginTop: 6, marginBottom: 4, width: '100%' },
-  barBg:  { width: 140, height: 4, backgroundColor: P.border, borderRadius: 2, overflow: 'hidden', marginBottom: 5 },
-  barFill:{ height: '100%', borderRadius: 2 },
-  row:    { flexDirection: 'row', alignItems: 'center', gap: 6 },
-  label:  { fontSize: 8,  color: P.gray,      letterSpacing: 2, fontWeight: '600' },
-  pct:    { fontSize: 10, fontWeight: '700',  letterSpacing: 0.5 },
-  streak: { fontSize: 10, color: P.gold },
-  midas:  { fontSize: 10, color: '#FFD700',   fontWeight: '700', letterSpacing: 1 },
-  hint:   { fontSize: 9,  color: '#555',       marginTop: 4, letterSpacing: 0.5 },
-});
-
-// ── Wallet Modal Styles ───────────────────────────────────────────────────────
-const wm = StyleSheet.create({
-  overlay: {
-    flex: 1,
-    backgroundColor: 'rgba(0,0,0,0.75)',
-    justifyContent: 'flex-end',
-  },
-  sheet: {
-    backgroundColor: P.mid,
-    borderTopLeftRadius: 24,
-    borderTopRightRadius: 24,
-    padding: 24,
-    paddingBottom: 44,
-    borderTopWidth: 1,
-    borderColor: P.gold,
-  },
-  handle: {
-    width: 40, height: 4,
-    backgroundColor: P.border,
-    borderRadius: 2,
-    alignSelf: 'center',
-    marginBottom: 20,
-  },
-  title:  { fontSize: 22, fontWeight: '700', color: P.offWhite, marginBottom: 4, letterSpacing: 0.5 },
-  sub:    { fontSize: 13, color: P.gray, marginBottom: 24 },
-  btn: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    backgroundColor: P.dark,
-    borderRadius: 16,
-    padding: 16,
-    marginBottom: 12,
-    borderWidth: 1,
-    borderColor: P.border,
-    gap: 12,
-  },
-  emoji:    { fontSize: 28 },
-  btnLabel: { fontSize: 16, fontWeight: '600', color: P.offWhite, marginBottom: 2 },
-  btnSub:   { fontSize: 12, color: P.gray },
-  arrow:    { fontSize: 20, color: P.gold },
-  cancelBtn: { alignItems: 'center', padding: 16, marginTop: 4 },
-  cancelText: { fontSize: 16, color: P.gray },
-});
-
 // ── Share Card Styles (4:5 portrait — Instagram feed) ─────────────────────────
 // Property images are 1024×1024 (square). Gold frame uses aspectRatio:1 so it
 // wraps the image exactly with no letterbox bars.
@@ -1104,14 +900,8 @@ const sc = StyleSheet.create({
     overflow: 'hidden',
     flexDirection: 'column',
   },
-  accentTop: {
-    height: 6,
-    width: '100%',
-  },
-  accentBottom: {
-    height: 6,
-    width: '100%',
-  },
+  accentTop:    { height: 6, width: '100%' },
+  accentBottom: { height: 6, width: '100%' },
 
   // Header: logo left, level pill right
   header: {

@@ -20,6 +20,8 @@ import { useWallet } from '../context/WalletContext';
 import { valueCalculator, PROPERTY_TIERS, CityType } from '../services/valueCalculator';
 import { priceDataService } from '../services/pythPriceService';
 import { buildClaimTransaction, getExplorerUrl, DEV_MODE } from '../services/claimService';
+import { P } from '../constants/theme';
+import { PROPERTY_IMAGES } from '../constants/images';
 
 // ── Jupiter deep link: open app if installed, fall back to web ────────────────
 const JUP_WEB_URL = 'https://jup.ag/swap/USDC-SOL';
@@ -34,42 +36,6 @@ const openJupiter = async () => {
   } catch {
     await Linking.openURL(JUP_WEB_URL);
   }
-};
-
-const P = {
-  black:    '#000000',
-  charcoal: '#0A0A0A',
-  dark:     '#141414',
-  mid:      '#1C1C1C',
-  border:   '#2A2A2A',
-  gray:     '#888888',
-  offWhite: '#F5F0E8',
-  gold:     '#C9A84C',
-  goldLight:'#E8C96A',
-  goldDeep: '#A07830',
-};
-
-const PROPERTY_IMAGES = {
-  ny_level1:  require('../../assets/images/properties/ny_level1.png'),
-  ny_level2:  require('../../assets/images/properties/ny_level2.png'),
-  ny_level3:  require('../../assets/images/properties/ny_level3.png'),
-  ny_level4:  require('../../assets/images/properties/ny_level4.png'),
-  ny_level5:  require('../../assets/images/properties/ny_level5.png'),
-  ny_level6:  require('../../assets/images/properties/ny_level6.png'),
-  ny_level7:  require('../../assets/images/properties/ny_level7.png'),
-  ny_level8:  require('../../assets/images/properties/ny_level8.png'),
-  ny_level9:  require('../../assets/images/properties/ny_level9.png'),
-  ny_level10: require('../../assets/images/properties/ny_level10.png'),
-  db_level1:  require('../../assets/images/properties/db_level1.png'),
-  db_level2:  require('../../assets/images/properties/db_level2.png'),
-  db_level3:  require('../../assets/images/properties/db_level3.png'),
-  db_level4:  require('../../assets/images/properties/db_level4.png'),
-  db_level5:  require('../../assets/images/properties/db_level5.png'),
-  db_level6:  require('../../assets/images/properties/db_level6.png'),
-  db_level7:  require('../../assets/images/properties/db_level7.png'),
-  db_level8:  require('../../assets/images/properties/db_level8.png'),
-  db_level9:  require('../../assets/images/properties/db_level9.png'),
-  db_level10: require('../../assets/images/properties/db_level10.png'),
 };
 
 const getImage = (imageKey) => PROPERTY_IMAGES[imageKey] || PROPERTY_IMAGES['ny_level1'];
@@ -129,7 +95,7 @@ const CurrentCard = ({ tier, city, solBalance, solPrice }) => {
   if (!tier) return null;
   const imgKey    = tier.imageKey?.[city] ?? 'ny_level1';
   const totalUSD  = solBalance * solPrice;
-  const percentile = valueCalculator.getPercentile(solBalance);
+  const percentile = valueCalculator.getPercentile(totalUSD);
 
   return (
     <View style={cc.wrap}>
@@ -151,7 +117,9 @@ const CurrentCard = ({ tier, city, solBalance, solPrice }) => {
       />
       {/* Content */}
       <View style={cc.content}>
-        <Text style={cc.eyebrow}>CURRENT STATUS · LEVEL {tier.level}</Text>
+        <Text style={cc.eyebrow}>
+          {city === 'MANHATTAN' ? 'NYC' : 'DUBAI'} CHAPTER  |  LEVEL {tier.level}
+        </Text>
         <Text style={cc.title} numberOfLines={2}>{tier.names[city]}</Text>
         <Text style={cc.loc}>{tier.locations[city]}</Text>
 
@@ -174,7 +142,7 @@ const CurrentCard = ({ tier, city, solBalance, solPrice }) => {
           <View style={cc.statDiv} />
           <View style={cc.stat}>
             <Text style={cc.statLabel}>RANK</Text>
-            <Text style={[cc.statVal, { color: P.goldLight, fontSize: 13 }]}>{percentile}</Text>
+            <Text style={[cc.statVal, { color: P.goldLight, fontSize: 13 }]}>▲ {percentile}</Text>
           </View>
         </View>
 
@@ -200,11 +168,11 @@ const cc = StyleSheet.create({
     elevation: 20,
   },
   accentTop:  { height: 3, width: '100%' },
-  imageWrap:  { width: '100%', backgroundColor: '#000000' },
+  imageWrap:  { width: '100%', backgroundColor: 'transparent' },
   image:      { width: '100%', height: 220 },  // contain in JSX, full pixel art visible
   goldSep:    { height: 2, width: '100%' },    // gold shimmer line, not a fade-out
   content:    { padding: 20, paddingTop: 16, backgroundColor: P.dark },
-  eyebrow:    { fontSize: 9, color: P.gold, letterSpacing: 3, fontWeight: '600', marginBottom: 10 },
+  eyebrow:    { fontSize: 9, color: P.gold, letterSpacing: 4.5, fontWeight: '700', marginBottom: 10 },
   title:      { fontSize: 20, fontWeight: '800', color: P.goldLight, letterSpacing: 0.3, marginBottom: 6 },
   loc:        { fontSize: 12, color: P.gray, marginBottom: 16 },
   statsRow: {
@@ -219,7 +187,7 @@ const cc = StyleSheet.create({
   statLabel: { fontSize: 9, color: P.gray, letterSpacing: 2, marginBottom: 4 },
   statVal:   { fontSize: 17, fontWeight: '700', color: P.offWhite },
   statDiv:   { width: 1, backgroundColor: P.border },
-  narrative: { fontSize: 13, color: P.gray, lineHeight: 20, textAlign: 'center', fontStyle: 'italic' },
+  narrative: { fontSize: 15, color: P.gray, lineHeight: 24, textAlign: 'center', fontStyle: 'italic' },
 });
 
 // ── Diagonal gold sweep — "your assets are moving upward" ─────────────────────
@@ -257,8 +225,29 @@ const GoldSweep = () => {
   );
 };
 
+// ── Percentile string → raw number (e.g. "Top 34.2%" → 34.2) ─────────────────
+const parseTopPct = (str) => {
+  if (!str || str === 'Newcomer') return null;
+  const m = str.match(/Top ([\d.]+)%/);
+  return m ? parseFloat(m[1]) : null;
+};
+
 // ── Progress Bar Section ──────────────────────────────────────────────────────
-const ProgressSection = ({ upgrade, city }) => {
+const ProgressSection = ({ upgrade, city, solBalance, solPrice }) => {
+  // Pulse glow on Level Up button — hooks must come before any early return
+  const pulseScale = useRef(new Animated.Value(1)).current;
+  useEffect(() => {
+    const anim = Animated.loop(
+      Animated.sequence([
+        Animated.timing(pulseScale, { toValue: 1.028, duration: 950, useNativeDriver: true }),
+        Animated.timing(pulseScale, { toValue: 1.0,   duration: 950, useNativeDriver: true }),
+        Animated.delay(2400),
+      ])
+    );
+    anim.start();
+    return () => anim.stop();
+  }, []);
+
   // Still loading — show nothing rather than "Maximum Level Reached" incorrectly
   if (!upgrade) return null;
 
@@ -270,46 +259,100 @@ const ProgressSection = ({ upgrade, city }) => {
     );
   }
   const pct = Math.min(Math.max(upgrade.progress, 0), 99);
+
+  // Next rank percentile string
+  const nextPct    = parseTopPct(valueCalculator.getPercentile(upgrade.nextTier.minUSD));
+  const nextPctStr = nextPct !== null
+    ? `Top ${nextPct % 1 === 0 ? nextPct.toFixed(0) : nextPct}%`
+    : null;
+
   return (
     <View style={pg.wrap}>
       <Text style={pg.eyebrow}>PROGRESS TO NEXT LEVEL</Text>
+
+      {/* ① Item name — prominent */}
       <Text style={pg.nextName}>{upgrade.nextTier.names[city]}</Text>
-      <View style={pg.barBg}>
-        <LinearGradient
-          colors={[P.goldDeep, P.gold, P.goldLight]}
-          start={{ x: 0, y: 0 }} end={{ x: 1, y: 0 }}
-          style={[pg.barFill, { width: `${pct}%` }]}
-        />
+
+      {/* ② Progress bar + pct label */}
+      <View style={pg.barRow}>
+        <View style={pg.barBg}>
+          <LinearGradient
+            colors={[P.goldDeep, P.gold, P.goldLight]}
+            start={{ x: 0, y: 0 }} end={{ x: 1, y: 0 }}
+            style={[pg.barFill, { width: `${pct}%` }]}
+          />
+        </View>
+        <Text style={pg.barPct}>{pct.toFixed(0)}%</Text>
       </View>
-      <Text style={pg.pctText}>
-        {pct.toFixed(0)}% — need{' '}
-        {upgrade.solNeeded.toFixed(2)} more SOL (${upgrade.usdNeeded.toLocaleString(undefined, { maximumFractionDigits: 0 })})
+
+      {/* ③ Need X SOL ($XXX) to unlock */}
+      <Text style={pg.unlockText}>
+        {'Need '}
+        <Text style={pg.solHighlight}>{upgrade.solNeeded.toFixed(2)} SOL</Text>
+        {` ($${upgrade.usdNeeded.toLocaleString(undefined, { maximumFractionDigits: 0 })}) to unlock`}
       </Text>
-      <TouchableOpacity style={pg.jupBtn} onPress={openJupiter}>
-        <LinearGradient
-          colors={[P.goldDeep, P.gold, P.goldLight]}
-          start={{ x: 0, y: 0 }} end={{ x: 1, y: 0 }}
-          style={pg.jupGrad}
-        >
-          <Text style={pg.jupText}>Upgrade via Jupiter</Text>
-        </LinearGradient>
-        <GoldSweep />
-      </TouchableOpacity>
+
+      {/* ④ Next Rank */}
+      {nextPctStr && (
+        <Text style={pg.rankText}>Next Rank: {nextPctStr} 🚀</Text>
+      )}
+
+      {/* ⑤ Italic narrative of next tier */}
+      {upgrade.nextTier.narratives?.[city] ? (
+        <Text style={pg.narrative}>"{upgrade.nextTier.narratives[city]}"</Text>
+      ) : null}
+
+      {/* ⑥ Level Up button — pulsing gold glow draws the eye */}
+      <Animated.View style={[pg.jupOuter, { transform: [{ scale: pulseScale }] }]}>
+        <TouchableOpacity style={pg.jupBtn} onPress={openJupiter} activeOpacity={0.85}>
+          <LinearGradient
+            colors={[P.goldDeep, P.gold, P.goldLight]}
+            start={{ x: 0, y: 0 }} end={{ x: 1, y: 0 }}
+            style={pg.jupGrad}
+          >
+            <Text style={pg.jupText}>Level Up via Jupiter</Text>
+          </LinearGradient>
+          <GoldSweep />
+        </TouchableOpacity>
+      </Animated.View>
     </View>
   );
 };
 
 const pg = StyleSheet.create({
-  wrap: { marginHorizontal: 16, marginTop: 16, padding: 20, backgroundColor: P.dark, borderRadius: 16, borderWidth: 1, borderColor: P.border },
-  eyebrow: { fontSize: 9, color: P.gold, letterSpacing: 3, fontWeight: '600', marginBottom: 8 },
-  nextName: { fontSize: 17, fontWeight: '600', color: P.offWhite, marginBottom: 14 },
-  barBg:   { height: 8, backgroundColor: P.border, borderRadius: 4, overflow: 'hidden', marginBottom: 8 },
+  wrap:     { marginHorizontal: 16, marginTop: 16, padding: 20, backgroundColor: P.dark, borderRadius: 16, borderWidth: 1, borderColor: P.border },
+  eyebrow:  { fontSize: 9, color: P.gold, letterSpacing: 3, fontWeight: '600', marginBottom: 10 },
+  nextName: { fontSize: 19, fontWeight: '700', color: P.offWhite, letterSpacing: 0.2, marginBottom: 14 },
+
+  // Bar row: bar fills flex, percentage label on right
+  barRow:  { flexDirection: 'row', alignItems: 'center', gap: 8, marginBottom: 12 },
+  barBg:   { flex: 1, height: 8, backgroundColor: P.border, borderRadius: 4, overflow: 'hidden' },
   barFill: { height: '100%', borderRadius: 4 },
-  pctText: { fontSize: 12, color: P.gray, marginBottom: 16 },
+  barPct:  { fontSize: 12, color: P.gray, fontWeight: '600', width: 34, textAlign: 'right' },
+
+  // "Need X.XX SOL ($XXX) to unlock"
+  unlockText:   { fontSize: 13, color: P.gray, marginBottom: 8 },
+  solHighlight: { fontSize: 14, color: P.goldLight, fontWeight: '700' },
+
+  // "Next Rank: Top X.X% 🚀"
+  rankText:  { fontSize: 13, color: P.gold, fontWeight: '600', marginBottom: 14 },
+
+  // Italic narrative
+  narrative: { fontSize: 13, color: P.gray, lineHeight: 20, fontStyle: 'italic', textAlign: 'center', marginBottom: 18 },
+
   maxText: { fontSize: 18, color: P.goldLight, textAlign: 'center', fontWeight: '700' },
+  // Outer wrapper carries the shadow glow; inner btn carries overflow:hidden for gradient clip
+  jupOuter: {
+    borderRadius: 12,
+    shadowColor: P.gold,
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.6,
+    shadowRadius: 14,
+    elevation: 12,
+  },
   jupBtn:  { borderRadius: 12, overflow: 'hidden' },
-  jupGrad: { paddingVertical: 14, alignItems: 'center' },
-  jupText: { fontSize: 15, fontWeight: '800', color: P.black },
+  jupGrad: { paddingVertical: 15, alignItems: 'center' },
+  jupText: { fontSize: 15, fontWeight: '800', color: P.black, letterSpacing: 0.5 },
 });
 
 // ── Future Target Card (Next +1 and +2) ──────────────────────────────────────
@@ -340,15 +383,13 @@ const FutureCard = ({ tier, city, mystery = false }) => {
           {mystery ? 'FUTURE TARGET' : 'NEXT LEVEL'}
         </Text>
         <Text style={[fc.name, mystery && { color: P.gray }]}>
-          {mystery ? '???  ' + tier.names[city].split(' ').slice(-2).join(' ') : tier.names[city]}
+          {mystery ? '???' : tier.names[city]}
         </Text>
         <Text style={fc.loc}>
           {mystery ? 'Unlocks at ' + fmtUSD(tier.minUSD) : tier.locations[city]}
         </Text>
         {!mystery && (
           <View style={fc.reqRow}>
-            <Text style={fc.req}>{tier.minSOL.toLocaleString()} SOL</Text>
-            <Text style={fc.reqSep}> · </Text>
             <Text style={fc.req}>{fmtUSD(tier.minUSD)}</Text>
           </View>
         )}
@@ -380,13 +421,28 @@ const fc = StyleSheet.create({
 
 // ── Claim My Territory ────────────────────────────────────────────────────────
 const ClaimSection = ({ tier, city, walletAddress, signAndSendTransaction }) => {
-  const [status, setStatus] = useState('idle'); // idle | claiming | success | error
+  const [status, setStatus] = useState('idle'); // idle | signing | confirming | success | error
   const [txSig,  setTxSig]  = useState(null);
 
+  // Gold burst overlay + button bounce on press
+  const flashAnim = useRef(new Animated.Value(0)).current;
+  const btnScale  = useRef(new Animated.Value(1)).current;
+
+  const triggerClaimAnim = () => {
+    flashAnim.setValue(0.8);
+    btnScale.setValue(0.96);
+    Animated.parallel([
+      Animated.timing(flashAnim, { toValue: 0, duration: 850, useNativeDriver: true }),
+      Animated.spring(btnScale,  { toValue: 1, friction: 3, tension: 55, useNativeDriver: true }),
+    ]).start();
+  };
+
   const handleClaim = async () => {
-    setStatus('claiming');
+    triggerClaimAnim();
+    setStatus('signing');
     try {
       const tx  = buildClaimTransaction({ tier, city, walletAddress });
+      setStatus('confirming');
       const sig = await signAndSendTransaction(tx);
       setTxSig(sig);
       setStatus('success');
@@ -439,28 +495,40 @@ const ClaimSection = ({ tier, city, walletAddress, signAndSendTransaction }) => 
         start={{ x: 0, y: 0 }} end={{ x: 1, y: 0 }}
         style={cl.accentLine}
       />
-      <Text style={cl.eye}>BLOCKCHAIN PROOF</Text>
-      <Text style={cl.title}>Claim My Territory</Text>
+      <Text style={cl.eye}>BLOCKCHAIN PROOF · PERMANENT RECORD</Text>
+      <Text style={cl.title}>Record Legacy on Solana</Text>
       <Text style={cl.sub}>
-        Sign a transaction to record{'\n'}Level {tier.level} on Solana Mainnet
+        Permanently inscribe Level {tier.level} on-chain.{'\n'}Your legacy lives on Solana Mainnet forever.
       </Text>
-      <TouchableOpacity
-        style={cl.btn}
-        onPress={handleClaim}
-        disabled={status === 'claiming'}
-        activeOpacity={0.85}
-      >
-        <LinearGradient
-          colors={[P.goldDeep, P.gold, P.goldLight, P.gold, P.goldDeep]}
-          start={{ x: 0, y: 0 }} end={{ x: 1, y: 0 }}
-          style={cl.btnGrad}
+
+      {/* Premium Claim button — outer glow + bounce scale */}
+      <Animated.View style={[cl.btnOuter, { transform: [{ scale: btnScale }] }]}>
+        <TouchableOpacity
+          style={cl.btn}
+          onPress={handleClaim}
+          disabled={status === 'signing' || status === 'confirming'}
+          activeOpacity={0.9}
         >
-          <Text style={cl.btnText}>
-            {status === 'claiming' ? 'Signing…' : 'Claim My Territory'}
-          </Text>
-        </LinearGradient>
-      </TouchableOpacity>
-      <Text style={cl.hint}>~0.000005 SOL network fee</Text>
+          <LinearGradient
+            colors={[P.goldDeep, P.gold, P.goldLight, P.gold, P.goldDeep]}
+            start={{ x: 0, y: 0 }} end={{ x: 1, y: 0 }}
+            style={cl.btnGrad}
+          >
+            <Text style={cl.btnText}>
+              {status === 'signing'    ? 'Signing…'
+             : status === 'confirming' ? 'Confirming…'
+             : 'Claim My Territory'}
+            </Text>
+          </LinearGradient>
+        </TouchableOpacity>
+      </Animated.View>
+
+      {(status === 'signing' || status === 'confirming') && (
+        <Text style={cl.hint}>
+          {status === 'signing' ? 'Opening wallet…' : 'Broadcasting to Solana…'}
+        </Text>
+      )}
+      {status === 'idle' && <Text style={cl.hint}>~0.000005 SOL network fee</Text>}
       {status === 'error' && (
         <>
           <Text style={cl.errText}>Transaction failed. Please try again.</Text>
@@ -469,6 +537,17 @@ const ClaimSection = ({ tier, city, walletAddress, signAndSendTransaction }) => 
           </TouchableOpacity>
         </>
       )}
+
+      {/* Gold burst overlay — renders on top, fades in/out on claim press */}
+      <Animated.View
+        pointerEvents="none"
+        style={{
+          position: 'absolute', top: 0, left: 0, right: 0, bottom: 0,
+          borderRadius: 16,
+          backgroundColor: 'rgba(255,215,0,0.55)',
+          opacity: flashAnim,
+        }}
+      />
     </View>
   );
 };
@@ -487,9 +566,18 @@ const cl = StyleSheet.create({
   eye:  { fontSize: 9, color: P.gold, letterSpacing: 3, fontWeight: '600', marginBottom: 8 },
   title: { fontSize: 20, fontWeight: '700', color: P.offWhite, marginBottom: 6 },
   sub:  { fontSize: 13, color: P.gray, lineHeight: 20, marginBottom: 20 },
-  btn:  { borderRadius: 12, overflow: 'hidden' },
-  btnGrad: { paddingVertical: 14, alignItems: 'center' },
-  btnText: { fontSize: 15, fontWeight: '800', color: P.black, letterSpacing: 0.5 },
+  // Outer wrapper: shadow glow without clipping; inner btn: overflow:hidden for gradient
+  btnOuter: {
+    borderRadius: 12,
+    shadowColor: P.gold,
+    shadowOffset: { width: 0, height: 6 },
+    shadowOpacity: 0.45,
+    shadowRadius: 16,
+    elevation: 14,
+  },
+  btn:     { borderRadius: 12, overflow: 'hidden' },
+  btnGrad: { paddingVertical: 16, alignItems: 'center' },
+  btnText: { fontSize: 16, fontWeight: '800', color: '#1A0800', letterSpacing: 1.2 },
   hint:     { fontSize: 11, color: P.border, textAlign: 'center', marginTop: 10 },
   errText:  { fontSize: 12, color: '#FF6B6B', textAlign: 'center', marginTop: 8 },
   retryBtn: { alignSelf: 'center', marginTop: 10, paddingVertical: 8, paddingHorizontal: 20,
@@ -533,17 +621,51 @@ export default function EmpireScreen() {
 
   const scrollRef = useRef(null);
 
+  // 10% tier buffer: remembers last displayed level per city to prevent yo-yo
+  const prevTierLevelRef = useRef({ MANHATTAN: null, DUBAI: null });
+
   // Clear stale state immediately on disconnect so reconnect doesn't flash old data
   useEffect(() => {
     if (!isConnected) {
       setCurrentTier(null);
       setUpgrade(null);
       setSolPrice(0);
+      prevTierLevelRef.current = { MANHATTAN: null, DUBAI: null };
     }
   }, [isConnected]);
 
   useEffect(() => {
     if (isConnected) loadData();
+  }, [isConnected, balance, city]);
+
+  // Silent 60s price refresh — no loading spinner
+  useEffect(() => {
+    if (!isConnected) return;
+    const id = setInterval(async () => {
+      try {
+        const prices = await priceDataService.fetchAllPrices(city);
+        const price  = prices.solPrice || 0;
+        setSolPrice(price);
+
+        const sol          = balance || 0;
+        const bufferedTier = valueCalculator.getTierForUSDBuffered(
+          sol * price, prevTierLevelRef.current[city]
+        );
+        prevTierLevelRef.current[city] = bufferedTier.level;
+
+        const result = valueCalculator.determineMapping({
+          solAmount:     sol,
+          solPrice:      price,
+          cityType:      city,
+          _tierOverride: bufferedTier,
+        });
+        setCurrentTier(result.tier);
+
+        const up = valueCalculator.calculateUpgrade({ solAmount: sol, solPrice: price, cityType: city });
+        setUpgrade(up);
+      } catch { /* silent */ }
+    }, 60_000);
+    return () => clearInterval(id);
   }, [isConnected, balance, city]);
 
   // Scroll to show peek of previous card on mount / data change
@@ -562,8 +684,19 @@ export default function EmpireScreen() {
       const price  = prices.solPrice || 0;
       setSolPrice(price);
 
-      const sol    = balance || 0;
-      const result = valueCalculator.determineMapping({ solAmount: sol, solPrice: price, cityType: city });
+      const sol          = balance || 0;
+      const bufferedTier = valueCalculator.getTierForUSDBuffered(
+        sol * price,
+        prevTierLevelRef.current[city]
+      );
+      prevTierLevelRef.current[city] = bufferedTier.level;
+
+      const result = valueCalculator.determineMapping({
+        solAmount:     sol,
+        solPrice:      price,
+        cityType:      city,
+        _tierOverride: bufferedTier,
+      });
       setCurrentTier(result.tier);
 
       const up = valueCalculator.calculateUpgrade({ solAmount: sol, solPrice: price, cityType: city });
@@ -606,21 +739,15 @@ export default function EmpireScreen() {
         </View>
       </LinearGradient>
 
-      {/* ─── Vertical Scroll: Past → Current (sticky) → Future ───────────── */}
+      {/* ─── Vertical Scroll: Past → Current → Future ───────────── */}
       <ScrollView
         ref={scrollRef}
-        stickyHeaderIndices={prevTier ? [1] : [0]}
         showsVerticalScrollIndicator={false}
         style={s.scroll}
         contentContainerStyle={s.scrollContent}
       >
-        {/* B. Legacy Peek (index 0 if prevTier exists, else skipped) */}
-        {prevTier ? (
-          <PrevCard tier={prevTier} city={city} />
-        ) : (
-          /* Spacer so stickyHeaderIndices still works */
-          <View style={{ height: 8 }} />
-        )}
+        {/* B. Legacy Peek */}
+        {prevTier && <PrevCard tier={prevTier} city={city} />}
 
         {/* C. Current Hero — sticky (index 1 when prevTier, index 0 when not) */}
         <View style={s.stickyWrap}>
@@ -640,7 +767,7 @@ export default function EmpireScreen() {
         </View>
 
         {/* D. Progress Section */}
-        <ProgressSection upgrade={upgrade} city={city} />
+        <ProgressSection upgrade={upgrade} city={city} solBalance={solBalance} solPrice={solPrice} />
 
         {/* D2. Claim My Territory — on-chain proof */}
         {currentTier && (

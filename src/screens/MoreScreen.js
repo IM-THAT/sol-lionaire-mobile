@@ -14,19 +14,7 @@ import {
 } from 'react-native';
 import { LinearGradient } from 'expo-linear-gradient';
 import { useWallet } from '../context/WalletContext';
-
-const P = {
-  black:    '#000000',
-  charcoal: '#0A0A0A',
-  dark:     '#141414',
-  mid:      '#1C1C1C',
-  border:   '#2A2A2A',
-  gray:     '#888888',
-  offWhite: '#F5F0E8',
-  gold:     '#C9A84C',
-  goldLight:'#E8C96A',
-  goldDeep: '#A07830',
-};
+import { P } from '../constants/theme';
 
 // ── Reusable section wrapper ──────────────────────────────────────────────────
 const Section = ({ title, children }) => (
@@ -118,9 +106,17 @@ export default function MoreScreen() {
             />
             <Text style={s.disclaimerTitle}>Simulation Notice</Text>
             <Text style={s.disclaimerBody}>
-              Sol-lionaire is an entertainment visualization tool. All valuations are simulations
-              based on real-time SOL price and do not represent actual ownership or investment advice.
-              Real estate benchmarks: Manhattan $23,000/m², Dubai $9,000/m² (Q1 2026).
+              {'Sol-lionaire is purely an '}
+              <Text style={s.bold}>entertainment and visualization app</Text>
+              {'. All asset valuations and level progressions are '}
+              <Text style={s.bold}>fictional simulations</Text>
+              {' based on real-time SOL/USD price data from CoinGecko. They do '}
+              <Text style={s.bold}>not represent real ownership</Text>
+              {' of any assets, nor do they constitute '}
+              <Text style={s.bold}>financial, investment, or real estate advice</Text>
+              {'.\n\nThe displayed real estate equivalents (e.g., Manhattan penthouse, Dubai villa) are illustrative only and use approximate 2026 market reference values for entertainment purposes. Actual real estate prices vary significantly by location, condition, and market conditions. Sol-lionaire has no affiliation with any real estate entities.\n\nCryptocurrency values are highly volatile. This app does not offer investment opportunities, trading, or financial services. '}
+              <Text style={s.bold}>Use at your own risk</Text>
+              {' and for entertainment only.'}
             </Text>
           </View>
         </Section>
@@ -184,4 +180,5 @@ const s = StyleSheet.create({
     marginTop: 6,
   },
   disclaimerBody:  { fontSize: 12, color: P.gray, lineHeight: 20 },
+  bold:            { fontWeight: '700', color: P.offWhite },
 });

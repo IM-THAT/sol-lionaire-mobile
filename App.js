@@ -1,5 +1,5 @@
 import 'react-native-get-random-values';
-import React from 'react';
+import React, { useState } from 'react';
 import { NavigationContainer } from '@react-navigation/native';
 import { createBottomTabNavigator } from '@react-navigation/bottom-tabs';
 import { StyleSheet } from 'react-native';
@@ -10,6 +10,7 @@ import HomeScreen from './src/screens/HomeScreen';
 import EmpireScreen from './src/screens/EmpireScreen';
 import DistrictScreen from './src/screens/DistrictScreen';
 import MoreScreen from './src/screens/MoreScreen';
+import SplashScreen from './src/screens/SplashScreen';
 
 import { WalletProvider } from './src/context/WalletContext';
 
@@ -17,8 +18,11 @@ const Tab = createBottomTabNavigator();
 
 
 export default function App() {
+  const [splashDone, setSplashDone] = useState(false);
+
   return (
     <SafeAreaProvider>
+      {!splashDone && <SplashScreen onFinish={() => setSplashDone(true)} />}
       <WalletProvider>
         <NavigationContainer>
           <Tab.Navigator
