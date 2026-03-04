@@ -30,6 +30,16 @@
         "projectId": "bcfd0b81-c599-43cd-a708-9272e27fdccf"
       }
     },
-    "owner": "minjilee"
+    "owner": "minjilee",
+    "plugins": [
+      [
+        "expo-build-properties",
+        {
+          "android": {
+            "enablePngCrunchInReleaseBuilds": false
+          }
+        }
+      ]
+    ]
   }
 }
