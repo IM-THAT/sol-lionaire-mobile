@@ -31,10 +31,8 @@ SOLIONAIRE maps your Solana wallet balance to iconic real estate tiers — from 
 ## Hackathon Submission
 
 - Repository: https://github.com/IM-THAT/sol-lionaire-mobile
-- Android APK (latest release asset): https://github.com/IM-THAT/sol-lionaire-mobile/releases/latest/download/app-release.apk
-- Releases page (all APKs): https://github.com/IM-THAT/sol-lionaire-mobile/releases
-
-If the direct APK link returns 404, create a GitHub Release and upload `app-release.apk` as an asset with the exact filename `app-release.apk`.
+- Android APK (direct download): https://github.com/IM-THAT/sol-lionaire-mobile/raw/main/submission/app-release.apk
+- Android APK (repo file page): https://github.com/IM-THAT/sol-lionaire-mobile/blob/main/submission/app-release.apk
 
 ---
 
