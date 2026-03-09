@@ -545,6 +545,16 @@ const ClaimSection = ({ tier, city, walletAddress, signAndSendTransaction, claim
           </LinearGradient>
         </TouchableOpacity>
 
+        {/* District nudge — directs user to check their rank */}
+        <View style={cl.districtNudge}>
+          <Text style={cl.districtNudgeIcon}>🏆</Text>
+          <View style={{ flex: 1 }}>
+            <Text style={cl.districtNudgeTitle}>Check Your Rank</Text>
+            <Text style={cl.districtNudgeSub}>See where you stand in The District tab</Text>
+          </View>
+          <Text style={cl.districtNudgeArrow}>›</Text>
+        </View>
+
         {/* Claim Again — resets this city's claim so user can re-claim */}
         <TouchableOpacity style={cl.claimAgainBtn} onPress={onReset} activeOpacity={0.7}>
           <Text style={cl.claimAgainText}>Claim Again</Text>
@@ -664,6 +674,23 @@ const cl = StyleSheet.create({
   memoValTx:      { fontSize: 10, color: '#888', fontFamily: 'monospace' },
   copyBtn:        { marginTop: 10, paddingVertical: 7, alignItems: 'center', borderRadius: 6, borderWidth: 1, borderColor: '#333' },
   copyBtnText:    { fontSize: 12, color: '#666', fontWeight: '600', letterSpacing: 0.5 },
+  districtNudge: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    marginTop: 12,
+    marginBottom: 4,
+    paddingVertical: 12,
+    paddingHorizontal: 14,
+    backgroundColor: 'rgba(201,168,76,0.07)',
+    borderRadius: 10,
+    borderWidth: 1,
+    borderColor: 'rgba(201,168,76,0.25)',
+    gap: 10,
+  },
+  districtNudgeIcon:  { fontSize: 20 },
+  districtNudgeTitle: { fontSize: 13, color: P.goldLight, fontWeight: '700', marginBottom: 2 },
+  districtNudgeSub:   { fontSize: 11, color: P.gray },
+  districtNudgeArrow: { fontSize: 22, color: P.gold, fontWeight: '300', marginLeft: 4 },
   claimAgainBtn:  { marginTop: 10, paddingVertical: 8, alignItems: 'center' },
   claimAgainText: { fontSize: 12, color: '#555', textDecorationLine: 'underline' },
   explorerBtn:      { borderRadius: 10, overflow: 'hidden' },
