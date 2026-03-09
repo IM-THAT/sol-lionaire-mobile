@@ -113,7 +113,14 @@ export const useRealWalletConnection = () => {
     setError(null);
   }, []);
 
-  const signAndSendTransaction = useCallback(async (transaction) => {
+  /**
+   * Sign and send a transaction.
+   *
+   * @param {Transaction} transaction        - unsigned web3.js Transaction
+   * @param {Keypair[]}   additionalSigners  - keypairs that must partialSign BEFORE
+   *                                          the user's wallet signs (e.g. NFT mint keypair)
+   */
+  const signAndSendTransaction = useCallback(async (transaction, additionalSigners = []) => {
     if (!isConnected || !walletAddress) throw new Error('Wallet not connected');
     try {
       if (Platform.OS === 'android' && authToken) {
@@ -126,6 +133,13 @@ export const useRealWalletConnection = () => {
           const { blockhash } = await connection.getLatestBlockhash();
           transaction.recentBlockhash = blockhash;
           transaction.feePayer = new PublicKey(walletAddress);
+
+          // Partial-sign with any additional keypairs (e.g. NFT mint keypair)
+          // Must happen AFTER blockhash is set and BEFORE user wallet signs
+          if (additionalSigners.length > 0) {
+            transaction.partialSign(...additionalSigners);
+          }
+
           const [signedTx] = await wallet.signTransactions({ transactions: [transaction] });
           const sig = await connection.sendRawTransaction(signedTx.serialize());
           await Promise.race([
