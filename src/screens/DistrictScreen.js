@@ -2,13 +2,14 @@
  * DistrictScreen — The District
  * Tab 3: Level-gated community hub (concept / coming soon)
  */
-import React from 'react';
-import { View, Text, ScrollView, StyleSheet } from 'react-native';
+import React, { useEffect, useState, useCallback } from 'react';
+import { View, Text, ScrollView, StyleSheet, RefreshControl, ActivityIndicator } from 'react-native';
 import { LinearGradient } from 'expo-linear-gradient';
 import { Ionicons } from '@expo/vector-icons';
 import { useWallet } from '../context/WalletContext';
 import { valueCalculator } from '../services/valueCalculator';
 import { priceDataService } from '../services/pythPriceService';
+import { fetchLeaderboard, fetchMyClaim, shortAddr } from '../services/heliusService';
 import { P } from '../constants/theme';
 
 const DISTRICTS = [
@@ -50,8 +51,54 @@ const getUserDistrictId = (level) => {
   return 'plaza';
 };
 
+// ── Leaderboard ───────────────────────────────────────────────────────────────
+const Leaderboard = ({ entries, myWallet, loading }) => {
+  if (loading) return (
+    <View style={lb.wrap}>
+      <ActivityIndicator size="small" color={P.gold} />
+    </View>
+  );
+  if (!entries || entries.length === 0) return (
+    <View style={lb.wrap}>
+      <Text style={lb.empty}>No claims yet — be the first!</Text>
+    </View>
+  );
+  return (
+    <View style={lb.wrap}>
+      <Text style={lb.title}>🏆  TOP CLAIMERS</Text>
+      {entries.slice(0, 5).map((e, i) => {
+        const isMe = myWallet && e.wallet === myWallet;
+        return (
+          <View key={e.wallet} style={[lb.row, isMe && lb.rowMe]}>
+            <Text style={lb.rank}>{i + 1}</Text>
+            <View style={lb.info}>
+              <Text style={[lb.addr, isMe && lb.addrMe]}>
+                {shortAddr(e.wallet)}{isMe ? '  ← YOU' : ''}
+              </Text>
+              <Text style={lb.detail}>Lv.{e.level}  ·  {e.name}</Text>
+            </View>
+          </View>
+        );
+      })}
+    </View>
+  );
+};
+
+const lb = StyleSheet.create({
+  wrap:   { paddingHorizontal: 16, paddingBottom: 14, paddingTop: 4 },
+  title:  { fontSize: 8, color: P.gold, letterSpacing: 3, fontWeight: '700', marginBottom: 10 },
+  empty:  { fontSize: 11, color: P.gray, fontStyle: 'italic' },
+  row:    { flexDirection: 'row', alignItems: 'center', paddingVertical: 6, borderBottomWidth: 1, borderBottomColor: '#1A1A1A' },
+  rowMe:  { backgroundColor: 'rgba(201,168,76,0.05)', borderRadius: 6, paddingHorizontal: 4 },
+  rank:   { fontSize: 12, color: P.gray, width: 20, fontWeight: '700' },
+  info:   { flex: 1 },
+  addr:   { fontSize: 12, color: P.offWhite, fontWeight: '600' },
+  addrMe: { color: P.gold },
+  detail: { fontSize: 10, color: P.gray, marginTop: 2 },
+});
+
 // ── District Card ─────────────────────────────────────────────────────────────
-const DistrictCard = ({ district, isLocked, isCurrent }) => (
+const DistrictCard = ({ district, isLocked, isCurrent, leaderboard, myWallet, lbLoading }) => (
   <View style={[dc.wrap, isCurrent && dc.wrapCurrent, isLocked && dc.wrapLocked]}>
     {/* Top accent line */}
     <LinearGradient
@@ -96,19 +143,18 @@ const DistrictCard = ({ district, isLocked, isCurrent }) => (
     <Text style={[dc.vibe, isLocked && dc.dim]}>{district.vibe}</Text>
 
     {/* Footer */}
-    <View style={dc.footer}>
-      {isLocked ? (
-        <>
-          <Ionicons name="lock-closed-outline" size={12} color="rgba(201,168,76,0.4)" />
-          <Text style={dc.footerLocked}>  Reach Level {district.minLevel} to unlock</Text>
-        </>
-      ) : (
-        <>
-          <Ionicons name="hourglass-outline" size={12} color={P.gray} />
-          <Text style={dc.footerSoon}>  Community features coming soon</Text>
-        </>
-      )}
-    </View>
+    {isLocked ? (
+      <View style={dc.footer}>
+        <Ionicons name="lock-closed-outline" size={12} color="rgba(201,168,76,0.4)" />
+        <Text style={dc.footerLocked}>  Reach Level {district.minLevel} to unlock</Text>
+      </View>
+    ) : (
+      <Leaderboard
+        entries={leaderboard}
+        myWallet={myWallet}
+        loading={lbLoading}
+      />
+    )}
   </View>
 );
 
@@ -167,7 +213,49 @@ const EmptyState = () => (
 
 // ── Main Screen ───────────────────────────────────────────────────────────────
 export default function DistrictScreen() {
-  const { balance, isConnected } = useWallet();
+  const { balance, isConnected, walletAddress } = useWallet();
+  const [leaderboard, setLeaderboard] = useState({ plaza: [], avenue: [], high_table: [] });
+  const [lbLoading, setLbLoading] = useState(false);
+  const [refreshing, setRefreshing] = useState(false);
+
+  /**
+   * Merge user's own claim into the leaderboard result so it always
+   * appears even if the global scan missed it (Memo Program is very busy).
+   */
+  const mergeMyClaimInto = useCallback(async (data, wallet) => {
+    if (!wallet) return data;
+    const myClaim = await fetchMyClaim(wallet);
+    if (!myClaim) return data;
+    const { tierGroup } = myClaim;
+    // Already present? skip
+    if (data[tierGroup].some(e => e.wallet === wallet)) return data;
+    // Add and re-sort
+    const updated = { ...data };
+    updated[tierGroup] = [...data[tierGroup], myClaim]
+      .sort((a, b) => b.level - a.level || b.ts - a.ts);
+    return updated;
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
+
+  const loadLeaderboard = useCallback(async () => {
+    setLbLoading(true);
+    let data = await fetchLeaderboard();
+    data = await mergeMyClaimInto(data, walletAddress);
+    setLeaderboard(data);
+    setLbLoading(false);
+  }, [walletAddress, mergeMyClaimInto]);
+
+  const onRefresh = useCallback(async () => {
+    setRefreshing(true);
+    let data = await fetchLeaderboard();
+    data = await mergeMyClaimInto(data, walletAddress);
+    setLeaderboard(data);
+    setRefreshing(false);
+  }, [walletAddress, mergeMyClaimInto]);
+
+  useEffect(() => {
+    if (isConnected) loadLeaderboard();
+  }, [isConnected, loadLeaderboard]);
 
   if (!isConnected) return <EmptyState />;
 
@@ -210,21 +298,23 @@ export default function DistrictScreen() {
         showsVerticalScrollIndicator={false}
         style={s.scroll}
         contentContainerStyle={s.scrollContent}
+        refreshControl={
+          <RefreshControl
+            refreshing={refreshing}
+            onRefresh={onRefresh}
+            tintColor={P.gold}
+          />
+        }
       >
-        {/* Coming soon notice */}
-        <View style={s.notice}>
-          <Text style={s.noticeEye}>COMING SOON</Text>
-          <Text style={s.noticeBody}>
-            Posts, photos, and real-time chat with holders in your district — arriving in a future update.
-          </Text>
-        </View>
-
         {DISTRICTS.map(district => (
           <DistrictCard
             key={district.id}
             district={district}
             isLocked={userLevel < district.minLevel}
             isCurrent={district.id === userDistrictId}
+            leaderboard={leaderboard[district.id]}
+            myWallet={walletAddress}
+            lbLoading={lbLoading}
           />
         ))}
         <View style={{ height: 60 }} />
