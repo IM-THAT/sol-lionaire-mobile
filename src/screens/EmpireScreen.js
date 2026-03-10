@@ -421,15 +421,132 @@ const fc = StyleSheet.create({
   reqSep:  { fontSize: 11, color: P.gray },
 });
 
+// ── Mint NFT Section — always visible when wallet connected ───────────────────
+const MintSection = ({ tier, city, walletAddress, signAndSendTransaction }) => {
+  const [mintStatus, setMintStatus] = useState('idle'); // idle | building | signing | done | error
+  const [mintAddr,   setMintAddr]   = useState(null);
+
+  const handleMint = async () => {
+    if (!walletAddress) return;
+    setMintStatus('building');
+    try {
+      const { transaction, mintKeypair, mintAddress } = buildMintNftTransaction({
+        level:    tier.level,
+        city,
+        nftName:  tier.names[city],
+        walletAddress,
+      });
+      setMintStatus('signing');
+      await signAndSendTransaction(transaction, [mintKeypair]);
+      setMintAddr(mintAddress);
+      setMintStatus('done');
+      playSound('claim_success');
+    } catch (e) {
+      console.error('NFT mint failed:', e);
+      setMintStatus('error');
+    }
+  };
+
+  if (mintStatus === 'done' && mintAddr) {
+    return (
+      <View style={mn.wrap}>
+        <LinearGradient
+          colors={[P.goldDeep, P.gold, P.goldLight, P.gold, P.goldDeep]}
+          start={{ x: 0, y: 0 }} end={{ x: 1, y: 0 }}
+          style={mn.accentLine}
+        />
+        <View style={mn.doneRow}>
+          <Ionicons name="diamond" size={20} color={P.gold} />
+          <View style={{ flex: 1, marginLeft: 10 }}>
+            <Text style={mn.doneTitle}>NFT Minted 🎉</Text>
+            <Text style={mn.doneAddr} numberOfLines={1} ellipsizeMode="middle">
+              {mintAddr}
+            </Text>
+          </View>
+        </View>
+        <TouchableOpacity style={mn.mintAgainBtn} onPress={() => { setMintStatus('idle'); setMintAddr(null); }}>
+          <Text style={mn.mintAgainText}>Mint Another</Text>
+        </TouchableOpacity>
+      </View>
+    );
+  }
+
+  return (
+    <View style={mn.wrap}>
+      <LinearGradient
+        colors={[P.goldDeep, P.gold, P.goldLight, P.gold, P.goldDeep]}
+        start={{ x: 0, y: 0 }} end={{ x: 1, y: 0 }}
+        style={mn.accentLine}
+      />
+      <Text style={mn.eye}>PROOF OF WEALTH · NFT</Text>
+      <Text style={mn.title}>Mint as NFT</Text>
+      <Text style={mn.sub}>
+        Immortalize Level {tier.level} as a Metaplex NFT.{'\n'}Tradeable on Magic Eden & Tensor.
+      </Text>
+      <TouchableOpacity
+        style={[mn.btn, (mintStatus === 'building' || mintStatus === 'signing') && mn.btnDisabled]}
+        onPress={handleMint}
+        disabled={mintStatus === 'building' || mintStatus === 'signing'}
+        activeOpacity={0.85}
+      >
+        <LinearGradient
+          colors={['#1A0E00', '#2E1A00', '#4A2A00', '#2E1A00', '#1A0E00']}
+          start={{ x: 0, y: 0 }} end={{ x: 1, y: 0 }}
+          style={mn.btnGrad}
+        >
+          <Ionicons name="diamond-outline" size={16} color={P.gold} style={{ marginRight: 8 }} />
+          <Text style={mn.btnText}>
+            {mintStatus === 'building' ? 'Building…'
+            : mintStatus === 'signing'  ? 'Open Wallet…'
+            : mintStatus === 'error'    ? '↩ Retry Mint'
+            : 'Mint as NFT'}
+          </Text>
+        </LinearGradient>
+      </TouchableOpacity>
+      {mintStatus === 'idle' && (
+        <Text style={mn.hint}>~0.01 SOL · Metaplex fee</Text>
+      )}
+      {mintStatus === 'error' && (
+        <Text style={mn.errText}>Mint failed — tap to retry</Text>
+      )}
+    </View>
+  );
+};
+
+const mn = StyleSheet.create({
+  wrap: {
+    marginHorizontal: 16,
+    marginTop: 12,
+    padding: 20,
+    backgroundColor: P.dark,
+    borderRadius: 16,
+    borderWidth: 1,
+    borderColor: 'rgba(201,168,76,0.3)',
+  },
+  accentLine:  { height: 2, borderRadius: 1, marginBottom: 14 },
+  eye:         { fontSize: 9, color: P.gold, letterSpacing: 3, fontWeight: '600', marginBottom: 6 },
+  title:       { fontSize: 18, fontWeight: '700', color: P.offWhite, marginBottom: 6 },
+  sub:         { fontSize: 12, color: P.gray, lineHeight: 18, marginBottom: 16 },
+  btn:         { borderRadius: 12, overflow: 'hidden', borderWidth: 1, borderColor: 'rgba(201,168,76,0.35)' },
+  btnDisabled: { opacity: 0.6 },
+  btnGrad:     { flexDirection: 'row', alignItems: 'center', justifyContent: 'center', paddingVertical: 14 },
+  btnText:     { fontSize: 14, fontWeight: '700', color: P.gold, letterSpacing: 0.6 },
+  hint:        { fontSize: 11, color: P.border, textAlign: 'center', marginTop: 8 },
+  errText:     { fontSize: 11, color: '#FF6B6B', textAlign: 'center', marginTop: 8 },
+  doneRow:     { flexDirection: 'row', alignItems: 'center', marginBottom: 10 },
+  doneTitle:   { fontSize: 14, color: P.goldLight, fontWeight: '700', marginBottom: 3 },
+  doneAddr:    { fontSize: 10, color: P.gray, fontFamily: 'monospace' },
+  mintAgainBtn:  { alignSelf: 'center', paddingVertical: 6 },
+  mintAgainText: { fontSize: 12, color: '#555', textDecorationLine: 'underline' },
+});
+
 // ── Claim My Territory ────────────────────────────────────────────────────────
 // claimedResult: { txSig, ts } from parent (per-city), null if not yet claimed
 // onClaimed(sig, ts): called after successful claim — persists result in parent
 // onReset(): clears claim result for this city (enables re-claim)
 const ClaimSection = ({ tier, city, walletAddress, signAndSendTransaction, claimedResult, onClaimed, onReset }) => {
-  const [status,     setStatus]     = useState('idle'); // idle | signing | confirming | error
-  const [copied,     setCopied]     = useState(false);
-  const [mintStatus, setMintStatus] = useState('idle'); // idle | building | signing | done | error
-  const [mintAddr,   setMintAddr]   = useState(null);
+  const [status, setStatus] = useState('idle'); // idle | signing | confirming | error
+  const [copied, setCopied] = useState(false);
 
   // Gold burst overlay + button bounce on press
   const flashAnim = useRef(new Animated.Value(0)).current;
@@ -457,27 +574,6 @@ const ClaimSection = ({ tier, city, walletAddress, signAndSendTransaction, claim
     } catch (e) {
       console.error('Claim failed:', e);
       setStatus('error');
-    }
-  };
-
-  const handleMint = async () => {
-    if (!walletAddress) return;
-    setMintStatus('building');
-    try {
-      const { transaction, mintKeypair, mintAddress } = buildMintNftTransaction({
-        level:         tier.level,
-        city,
-        nftName:       tier.names[city],
-        walletAddress,
-      });
-      setMintStatus('signing');
-      await signAndSendTransaction(transaction, [mintKeypair]);
-      setMintAddr(mintAddress);
-      setMintStatus('done');
-      playSound('claim_success');
-    } catch (e) {
-      console.error('NFT mint failed:', e);
-      setMintStatus('error');
     }
   };
 
@@ -578,48 +674,6 @@ const ClaimSection = ({ tier, city, walletAddress, signAndSendTransaction, claim
           </View>
           <Text style={cl.districtNudgeArrow}>›</Text>
         </View>
-
-        {/* ── Mint NFT ─────────────────────────────────────────────────────── */}
-        {mintStatus === 'done' && mintAddr ? (
-          <View style={cl.mintDone}>
-            <Ionicons name="diamond" size={18} color={P.gold} />
-            <View style={{ flex: 1, marginLeft: 10 }}>
-              <Text style={cl.mintDoneTitle}>NFT Minted 🎉</Text>
-              <Text style={cl.mintDoneAddr} numberOfLines={1} ellipsizeMode="middle">
-                {mintAddr}
-              </Text>
-            </View>
-          </View>
-        ) : (
-          <TouchableOpacity
-            style={[cl.mintBtn, (mintStatus === 'building' || mintStatus === 'signing') && cl.mintBtnDisabled]}
-            onPress={handleMint}
-            disabled={mintStatus === 'building' || mintStatus === 'signing'}
-            activeOpacity={0.85}
-          >
-            <LinearGradient
-              colors={['#1A0E00', '#3A2000', '#5A3400', '#3A2000', '#1A0E00']}
-              start={{ x: 0, y: 0 }} end={{ x: 1, y: 0 }}
-              style={cl.mintBtnGrad}
-            >
-              <Ionicons
-                name="diamond-outline"
-                size={16}
-                color={P.gold}
-                style={{ marginRight: 8 }}
-              />
-              <Text style={cl.mintBtnText}>
-                {mintStatus === 'building' ? 'Building…'
-                : mintStatus === 'signing'  ? 'Signing…'
-                : mintStatus === 'error'    ? '↩ Retry Mint'
-                : 'Mint as NFT'}
-              </Text>
-            </LinearGradient>
-          </TouchableOpacity>
-        )}
-        {mintStatus === 'error' && (
-          <Text style={cl.mintErrText}>Mint failed — tap to retry</Text>
-        )}
 
         {/* Claim Again — resets this city's claim so user can re-claim */}
         <TouchableOpacity style={cl.claimAgainBtn} onPress={onReset} activeOpacity={0.7}>
@@ -977,6 +1031,16 @@ export default function EmpireScreen() {
             claimedResult={claimedByCity[city] ?? null}
             onClaimed={(sig, ts) => setClaimedByCity(prev => ({ ...prev, [city]: { txSig: sig, ts } }))}
             onReset={() => setClaimedByCity(prev => ({ ...prev, [city]: null }))}
+          />
+        )}
+
+        {/* D3. Mint as NFT — always available, independent of claim */}
+        {currentTier && (
+          <MintSection
+            tier={currentTier}
+            city={city}
+            walletAddress={walletAddress}
+            signAndSendTransaction={signAndSendTransaction}
           />
         )}
 
