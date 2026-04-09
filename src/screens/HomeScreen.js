@@ -547,6 +547,7 @@ export default function HomeScreen() {
                 style={s.walletTag}
                 onPress={() => {
                   Clipboard.setString(walletAddress);
+                  playSound('copy_click');
                   setCopiedAddr(true);
                   setTimeout(() => setCopiedAddr(false), 2000);
                 }}
